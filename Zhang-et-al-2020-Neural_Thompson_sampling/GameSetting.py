@@ -9,28 +9,32 @@ import numpy as np
 
 def SampleContext(d, K):
     # according to the description, the context is uniformly distributed on a d-dimension sphere
-    # d is the dimension of context, a scalar
+    # d is the dimension of context, a scalar, and it is required to be an even number
     # K is the total number of arts, a scalar
     
     # this function return context, as an d*K matrix, each column corresponds a context of action
     
-    context = np.random.normal(loc=0, scale=1, size=(d, K))
+    context = np.random.normal(loc=0, scale=1, size=(np.int64(d / 2), K))
     length = np.sqrt( np.sum(context * context, axis = 0) )
+    context = np.tile(context, (2, 1))
     length = np.tile(length, (d, 1))
-    context = context / length # each column represent a context
+    context = context / length / np.sqrt(2) # each column represent a context
     return context
 
 def GetRealReward(context, A):
     # context is the context of arm, a d*1 vector
     # A is the d*1 matrix,
     
-    # this function return the reward,
-    assert len(context.shape) == 1, "GetRealReward: contex is not a vector" 
-    assert len(context.shape) == 1, "GetRealReward: A is not a vector" 
-    assert len(context) == len(A), "GetRealReward: length of A not equal to length of context" 
-        
-    
     # return 2 * np.exp(innerproduct) / (1 + np.exp(innerproduct)) + xi, xi follows standard normal distribution
     innerproduct = A.dot(context)
-    # return 2 * np.exp(innerproduct) / (1 + np.exp(innerproduct)) - 1 + np.random.normal(loc=0, scale=1)
-    return 2 * np.exp(innerproduct) / (1 + np.exp(innerproduct)) - 1
+    return 2 * np.exp(innerproduct) / (1 + np.exp(innerproduct)) - 1 + np.random.normal(loc = 0, scale = 0.05)
+    # return 2 * np.exp(innerproduct) / (1 + np.exp(innerproduct)) - 1
+
+# unit test
+# arm = SampleContext(d = 4, K = 2)
+# print(np.sum(arm[0:4, 0] * arm[0:4, 0]))
+# print(np.sum(arm[0:4, 1] * arm[0:4, 1]))
+
+# A = np.array([1, 2, 3])
+# context = np.array([[1, 0], [0, 1], [1, 1]])
+# print(GetRealReward(context, A))
