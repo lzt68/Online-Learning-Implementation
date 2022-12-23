@@ -84,7 +84,7 @@ class NeuralNetwork(torch.nn.Module):
 
         grad = np.array([])
         for para in self.parameters():
-            grad = np.concatenate([grad, para.grad.detach().numpy().flatten()], axis=0)
+            grad = np.concatenate([grad, para.grad.cpu().detach().numpy().flatten()], axis=0)
         return grad
 
 
@@ -347,7 +347,7 @@ class NeuralAgent:
 
 # criterion = torch.nn.MSELoss()
 # optimizer = torch.optim.SGD(mynn.parameters(), lr=0.01, momentum=0.9)
-# for train_index in range(50):
+# for train_index in range(5000):
 #     optimizer.zero_grad()
 #     # output = mynn.forward(X_train)[:, 0]
 #     # loss = criterion(output, y_train)
@@ -359,7 +359,7 @@ class NeuralAgent:
 #     if (train_index + 1) % 50 == 0:
 #         output_test = mynn.forward(X_test)[:, 0]
 #         loss_test = criterion(output_test, y_test)
-#         print(f"round {train_index+1}, train MSE {loss.detach().numpy()}, test MSE {loss_test.detach().numpy()}")
+#         print(f"round {train_index+1}, train MSE {loss.cpu().detach().numpy()}, test MSE {loss_test.cpu().detach().numpy()}")
 
 # grad = mynn.GetGrad(X_train[0, :])
 # print(grad)
