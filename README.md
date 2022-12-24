@@ -22,6 +22,10 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "Zhou-et-al-2020-Neural_UCB_Exploration": http://arxiv.org/abs/1911.04462
 
+"Jun-Nowak-2016-Anytime_Exploration_Best_Arm_Identification": https://proceedings.mlr.press/v48/jun16.html
+
+"Karnin-Koren-Somekh-2013-Almost_Optimal_Exploration_Best_Arm_Identification": http://proceedings.mlr.press/v28/karnin13.pdf
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu
