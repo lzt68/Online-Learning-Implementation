@@ -11,6 +11,7 @@ class NeuralNetwork(torch.nn.Module):
         L: int = 2,
         m: int = 20,
         random_seed: int = 12345,
+        device: torch.device = torch.device("cpu"),
     ):
         """The proposed neural network structure in Zhou 2020
 
@@ -19,6 +20,7 @@ class NeuralNetwork(torch.nn.Module):
             L (int, optional): Number of Layers. Defaults to 2.
             m (int, optional): Width of each layer. Defaults to 20.
             random_seed (int, optional): rando_seed. Defaults to 12345.
+            device (torch.device, optional): The device of calculateing tensor. Defaults to torch.device("cpu").
         """
         super().__init__()
         np.random.seed(random_seed)
@@ -30,6 +32,9 @@ class NeuralNetwork(torch.nn.Module):
         self.random_seed = random_seed
         self.activation = torch.nn.ReLU()
 
+        self.device = device
+        print(f"Using device {self.device}")
+
         self.W = torch.nn.ParameterDict()
         w_for_1 = np.random.randn(d // 2, m // 2) * np.sqrt(4 / m)
         w_for_1_to_Lminus1 = np.random.randn(m // 2, m // 2) * np.sqrt(4 / m)
@@ -39,17 +44,17 @@ class NeuralNetwork(torch.nn.Module):
                 W = np.zeros((d, m))
                 W[0 : d // 2, 0 : m // 2] = w_for_1
                 W[d // 2 :, m // 2 :] = w_for_1
-                self.W["W1"] = torch.nn.Parameter(torch.from_numpy(W))
+                self.W["W1"] = torch.nn.Parameter(torch.from_numpy(W)).to(self.device)
             elif layer_index == L:
                 W = np.zeros((m, 1))
                 W[0 : m // 2, 0] = w_for_L
                 W[m // 2 :, 0] = -w_for_L
-                self.W[f"W{layer_index}"] = torch.nn.Parameter(torch.from_numpy(W))
+                self.W[f"W{layer_index}"] = torch.nn.Parameter(torch.from_numpy(W)).to(self.device)
             else:
                 W = np.zeros((m, m))
                 W[0 : m // 2, 0 : m // 2] = w_for_1_to_Lminus1
                 W[m // 2 :, m // 2 :] = w_for_1_to_Lminus1
-                self.W[f"W{layer_index}"] = torch.nn.Parameter(torch.from_numpy(W))
+                self.W[f"W{layer_index}"] = torch.nn.Parameter(torch.from_numpy(W)).to(self.device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """we accept a Tensor of input data and we must return
@@ -62,6 +67,7 @@ class NeuralNetwork(torch.nn.Module):
             torch.Tensor: The predicted mean reward of each arm
         """
         assert x.shape[1] == self.d, "Dimension doesn't match"
+        x = x.to(self.device)
         for layer_index in range(1, self.L + 1):
             x = torch.matmul(x, self.W[f"W{layer_index}"])
             if layer_index != self.L:
@@ -225,7 +231,8 @@ class NeuralAgent:
         self.predicted_reward_upperbound = np.zeros(T)
         self.history_context = np.zeros((T, d))
 
-        self.mynn = NeuralNetwork(d=d, L=L, m=m)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.mynn = NeuralNetwork(d=d, L=L, m=m, device=self.device)
         self.optimizer = torch.optim.SGD(self.mynn.parameters(), lr=0.01)
         self.criterion = torch.nn.MSELoss()
         self.p = m + m * d + m * m * (L - 2)
@@ -241,7 +248,7 @@ class NeuralAgent:
             int: the index of predicted arm, take value from 0, 1, ..., K-1
         """
         predict_reward = self.mynn.forward(torch.from_numpy(context_list))[:, 0]
-        predict_reward = predict_reward.detach().numpy()
+        predict_reward = predict_reward.cpu().detach().numpy()
 
         Z_t_minus1_inverse = np.linalg.inv(self.Z_t_minus1)
 
@@ -280,11 +287,11 @@ class NeuralAgent:
             for batch_index in range(0, self.t // self.batchsize + 1):
                 # split the batch
                 if batch_index < self.t // self.batchsize:
-                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize : (batch_index + 1) * self.batchsize, :])
-                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize : (batch_index + 1) * self.batchsize])
+                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize : (batch_index + 1) * self.batchsize, :]).to(self.device)
+                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize : (batch_index + 1) * self.batchsize]).to(self.device)
                 else:
-                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize :, :])
-                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize :])
+                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize :, :]).to(self.device)
+                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize :]).to(self.device)
 
                 # update the neural network
                 self.optimizer.zero_grad()
@@ -324,10 +331,10 @@ class NeuralAgent:
 # d = 4
 # L = 2
 # m = 4
-# mynn = NeuralNetwork(d=d, L=L, m=m)
+# mynn = NeuralNetwork(d=d, L=L, m=m, device=device)
 # mynn.to(device=device)
 
-# batchsize = 1000
+# batchsize = 10
 # x = np.random.normal(loc=0.0, scale=1.0, size=(batchsize, d // 2))
 # x = np.concatenate([x, x], axis=1)
 # A = np.random.uniform(low=0.0, high=1.0, size=(d, d))
