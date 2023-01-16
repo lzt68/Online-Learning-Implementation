@@ -10,7 +10,7 @@ This folder contains the implementation of algorithm in *Neural Contextual Bandi
 + agent.py: The source file of neural ucb, uniform sampling and best arm
 + GameSetting.py: this script contains the function to generate context and reward in each round
 
-UCB_Exploration.ipynb: this notebook implement the algorithm, with using numpy to implement the neural network, without using pytorch or tensorflow or something like that
+UCB_Exploration.ipynb: this notebook implement the algorithm with pytorch
 
 ## Contact
 

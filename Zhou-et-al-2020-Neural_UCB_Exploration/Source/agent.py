@@ -429,7 +429,7 @@ class NeuralAgent:
 # grad = mynn.GetGrad(x[0, :])
 # print(grad)
 
-#%% unit test 1
+#%% unit test 5 -- test the experiment oracle
 # from GameSetting import *
 
 # ## Set the parameter of the game
@@ -460,7 +460,7 @@ class NeuralAgent:
 
 #     print(f"round index {tt}; best choose {best_ind}, reward is {best_reward}; uniform choose {uniform_ind}, reward is {uniform_reward}")
 
-#%% unit test 2
+#%% unit test 6 -- test the neural ucb algorithm in the experiment oracle
 # from GameSetting import *
 
 # ## Set the parameter of the game
