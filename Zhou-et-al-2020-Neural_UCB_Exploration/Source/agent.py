@@ -55,6 +55,10 @@ class NeuralNetwork(torch.nn.Module):
                 W[0 : m // 2, 0 : m // 2] = w_for_1_to_Lminus1
                 W[m // 2 :, m // 2 :] = w_for_1_to_Lminus1
                 self.W[f"W{layer_index}"] = torch.nn.Parameter(torch.from_numpy(W)).to(self.device)
+        self.W0 = dict()
+        for key in self.W.keys():
+            self.W0[key] = deepcopy(self.W[key])
+            self.W0[key].requires_grad_(requires_grad=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """we accept a Tensor of input data and we must return
@@ -182,14 +186,13 @@ class NeuralAgent:
         L: int = 2,
         m: int = 20,
         gamma_t: float = 0.01,
-        v: float = 0.1,
+        nu: float = 0.1,
         lambda_: float = 0.01,
         delta: float = 0.01,
         S: float = 0.01,
         eta: float = 0.001,
         frequency: int = 50,
         batchsize: int = 50,
-        verbose: bool = True,
     ):
         """The proposed Neural UCB algorithm for solving contextual bandits
 
@@ -207,7 +210,6 @@ class NeuralAgent:
             eta (float, optional): Step size. Defaults to 0.001.
             frequency (int, optional): The interval between two training rounds. Defaults to 50.
             batchsize (int, optional): The batchsize of applying SGD on the neural network. Defaults to None.
-            verbose (bool, optional): Whether we will output the training process. Defaults to True.
         """
         self.K = K
         self.T = T
@@ -216,14 +218,13 @@ class NeuralAgent:
         self.L = L
         self.m = m
         self.gamma_t = gamma_t
-        self.v = v
+        self.nu = nu
         self.lambda_ = lambda_
         self.delta = delta
         self.S = S
         self.eta = eta
         self.frequency = frequency  # we train the network after frequency, e.g. per 50 round
         self.batchsize = batchsize
-        self.verbose = verbose
         self.t = 0  # marks the index of period
         self.history_reward = np.zeros(T)
         self.history_action = np.zeros(T)
@@ -233,7 +234,7 @@ class NeuralAgent:
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.mynn = NeuralNetwork(d=d, L=L, m=m, device=self.device)
-        self.optimizer = torch.optim.SGD(self.mynn.parameters(), lr=0.01)
+        self.optimizer = torch.optim.SGD(self.mynn.parameters(), lr=self.eta)
         self.criterion = torch.nn.MSELoss()
         self.p = m + m * d + m * m * (L - 2)
         self.Z_t_minus1 = lambda_ * np.eye(self.p)
@@ -279,26 +280,50 @@ class NeuralAgent:
         self.Z_t_minus1 = self.Z_t_minus1 + grad_parameter.dot(grad_parameter.transpose()) / self.m
 
         if (self.t + 1) % self.frequency == 0:  # train the network
-            # shuffle the history and conduct SGD
-            history_index = np.arange(self.t + 1)
-            np.random.shuffle(history_index)
-            temp_history_context = self.history_context[history_index, :]
-            temp_history_reward = self.history_reward[history_index]
-            for batch_index in range(0, self.t // self.batchsize + 1):
-                # split the batch
-                if batch_index < self.t // self.batchsize:
-                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize : (batch_index + 1) * self.batchsize, :]).to(self.device)
-                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize : (batch_index + 1) * self.batchsize]).to(self.device)
-                else:
-                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize :, :]).to(self.device)
-                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize :]).to(self.device)
+            # self.mynn = NeuralNetwork(d=self.d, L=self.L, m=self.m, device=self.device)  ## the same random seed will generate the same initial value
+            for key in self.mynn.W.keys():
+                self.mynn.W[key].data = self.mynn.W0[key].data
 
-                # update the neural network
-                self.optimizer.zero_grad()
-                output = self.mynn.forward(X_temp)
-                loss = self.criterion(output[:, 0], y_temp)
-                loss.backward()
-                self.optimizer.step()
+            # for jj in range(self.t):  ## J=t at round t, but when we adopt such setting, the training process will be very slow
+            for jj in range(np.minimum(self.t, 100)):
+                loss_ = list()
+
+                # shuffle the history and conduct SGD
+                history_index = np.arange(self.t + 1)
+                # np.random.shuffle(history_index)
+                temp_history_context = self.history_context[history_index, :]
+                temp_history_reward = self.history_reward[history_index]
+                for batch_index in range(0, self.t // self.batchsize + 1):
+                    # split the batch
+                    if batch_index < self.t // self.batchsize:
+                        X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize : (batch_index + 1) * self.batchsize, :]).to(self.device)
+                        y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize : (batch_index + 1) * self.batchsize]).to(self.device)
+                    else:
+                        X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize :, :]).to(self.device)
+                        y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize :]).to(self.device)
+
+                    # update the neural network
+                    self.optimizer.zero_grad()
+                    output = self.mynn.forward(X_temp)
+
+                    # calculate the loss function
+                    # in their orginal paper, $loss(\theta)=\sum_{i=1}^t(f(x_{i,a_i}, \theta)-r_{i,a_i})^2+m\lambda\|\theta-\theta^{(0)}\|_2^2/2$
+                    # but here we set $loss(\theta)=\sum_{i=1}^t(f(x_{i,a_i}, \theta)-r_{i,a_i})^2/t+\lambda\|\theta-\theta^{(0)}\|_2^2/2/p$
+                    # to balance the terms in the loss function
+                    loss = self.criterion(output[:, 0], y_temp)  ## predict error
+                    # loss = torch.sum((output[:, 0] - y_temp) ** 2)
+                    ## regularization
+                    for key in self.mynn.W.keys():
+                        # loss += self.lambda_ * self.m * torch.sum((self.mynn.W[key] - self.mynn.W0[key]) ** 2) / 2
+                        loss += self.lambda_ * torch.sum((self.mynn.W[key] - self.mynn.W0[key]) ** 2) / 2 / self.p
+                    loss.backward()
+                    self.optimizer.step()
+
+                    # record the training process
+                    loss_.append(loss.cpu().detach().numpy())
+
+                if (jj + 1) % 20 == 0:
+                    print(f"{jj+1} training epoch, mean loss value is {np.mean(loss_)}")
 
         self.t += 1
 
@@ -307,9 +332,14 @@ class NeuralAgent:
 # d = 4
 # L = 2
 # m = 4
-# mynn = NeuralNetwork(d=d, L=L, m=m)
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# mynn = NeuralNetwork(d=d, L=L, m=m, device=device)
+# print("Trainable Parameter")
 # for para in mynn.parameters():
 #     print(para)
+# print("W0")
+# for key in mynn.W0.keys():
+#     print(mynn.W0[key], mynn.W0[key].requires_grad, type(mynn.W0[key]))
 # batchsize = 4
 # x = np.zeros((batchsize, d))
 # x = torch.from_numpy(x)
@@ -470,7 +500,7 @@ class NeuralAgent:
 # d = 6  # the dimension of context
 # A = np.random.normal(loc=0, scale=1, size=(d, d))
 
-# neuralagent = NeuralAgent(K=K, T=T, d=d)
+# neuralagent = NeuralAgent(K=K, T=T, d=d, eta=0.001, lambda_=0.1, batchsize=100, m=20)
 # bestagent = BestAgent(K, T, d, A)
 # uniformagent = UniformAgent(K, T, d)
 # for tt in range(1, T + 1):
