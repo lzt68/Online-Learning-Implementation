@@ -1,7 +1,6 @@
 import numpy as np
 import random
 from copy import deepcopy
-from GameSetting import *
 from NeuralNetworkRelatedFunction import *
 import torch
 
@@ -72,6 +71,9 @@ class NeuralNetwork(torch.nn.Module):
         Returns:
             torch.Tensor: The predicted mean reward of each arm
         """
+        if len(x.shape) == 1:
+            x = x[None, :]
+
         assert x.shape[1] == self.d, "Dimension doesn't match"
         x = x.to(self.device)
         for layer_index in range(1, self.L + 1):
@@ -147,10 +149,11 @@ class NeuralAgent:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.mynn = NeuralNetwork(d=d, L=L, m=m, device=self.device)
         self.optimizer = torch.optim.SGD(self.mynn.parameters(), lr=eta)
+        self.criterion = torch.nn.MSELoss()
 
         # the setup of the trainning process
         self.nu = nu
-        self.lambda_ = self.lambda_
+        self.lambda_ = lambda_
         self.eta = eta
         self.frequency = frequency
         self.batchsize = batchsize
@@ -173,19 +176,19 @@ class NeuralAgent:
             int: the index of predicted arm, take value from 0, 1, ..., K-1
         """
         sample_reward_ = np.zeros(self.K)
+        predict_reward_ = np.zeros(self.K)
         U_inverse = np.linalg.inv(self.U)
         for arm in range(1, self.K + 1):
             grad_arm = self.mynn.GetGrad(torch.from_numpy(context_list[arm - 1, :]))
-            sigma_t_k2 = self.lambda_ * grad_arm.dot(U_inverse).dot(grad_arm)
-            predict_reward = self.mynn.forward(torch.from_numpy(context_list[arm - 1, :]))
-            sample_reward_[arm - 1] = self.random_generator.normalvariate(mu=predict_reward, sigma=np.sqrt(self.nu**2 * sigma_t_k2))
-            # sample_reward_[arm - 1] = np.random.normal(loc=predict_reward, scale=np.sqrt(self.nu**2 * sigma_t_k2))
+            sigma_t_k2 = self.lambda_ * grad_arm.dot(U_inverse).dot(grad_arm) / self.m
+            predict_reward_[arm - 1] = self.mynn.forward(torch.from_numpy(context_list[arm - 1, :]))
+            sample_reward_[arm - 1] = self.random_generator.normalvariate(mu=predict_reward_[arm - 1], sigma=np.sqrt(self.nu**2 * sigma_t_k2))
         ind = np.argmax(sample_reward_)
 
         # save the history
         self.history_action[self.t] = ind
         self.history_context[self.t, :] = context_list[ind, :]
-        self.predicted_reward[self.t] = predict_reward[ind]
+        self.predicted_reward[self.t] = predict_reward_[ind]
 
         return ind
 
@@ -200,26 +203,50 @@ class NeuralAgent:
 
         # train the network
         if (self.t + 1) % self.frequency == 0:
-            # shuffle the history and conduct SGD
-            history_index = np.arange(self.t + 1)
-            np.random.shuffle(history_index)
-            temp_history_context = self.history_context[history_index, :]
-            temp_history_reward = self.history_reward[history_index]
-            for batch_index in range(0, self.t // self.batchsize + 1):
-                # split the batch
-                if batch_index < self.t // self.batchsize:
-                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize : (batch_index + 1) * self.batchsize, :]).to(self.device)
-                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize : (batch_index + 1) * self.batchsize]).to(self.device)
-                else:
-                    X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize :, :]).to(self.device)
-                    y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize :]).to(self.device)
+            # initialize the network again
+            for key in self.mynn.W.keys():
+                self.mynn.W[key].data = deepcopy(self.mynn.W0[key].data)
 
-                # update the neural network
-                self.optimizer.zero_grad()
-                output = self.mynn.forward(X_temp)
-                loss = self.criterion(output[:, 0], y_temp)
-                loss.backward()
-                self.optimizer.step()
+            # for jj in range(self.t):  ## J=t at round t, but when we adopt such setting, the training process will be very slow
+            for jj in range(np.minimum(self.t, 100)):
+                loss_ = list()
+
+                # shuffle the history and conduct SGD
+                history_index = np.arange(self.t + 1)
+                np.random.shuffle(history_index)
+                temp_history_context = self.history_context[history_index, :]
+                temp_history_reward = self.history_reward[history_index]
+                for batch_index in range(0, self.t // self.batchsize + 1):
+                    # split the batch
+                    if batch_index < self.t // self.batchsize:
+                        X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize : (batch_index + 1) * self.batchsize, :]).to(self.device)
+                        y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize : (batch_index + 1) * self.batchsize]).to(self.device)
+                    else:
+                        X_temp = torch.from_numpy(temp_history_context[batch_index * self.batchsize :, :]).to(self.device)
+                        y_temp = torch.from_numpy(temp_history_reward[batch_index * self.batchsize :]).to(self.device)
+
+                    # update the neural network
+                    self.optimizer.zero_grad()
+                    output = self.mynn.forward(X_temp)
+
+                    # calculate the loss function
+                    # in their orginal paper, $loss(\theta)=\sum_{i=1}^t(f(x_{i,a_i}, \theta)-r_{i,a_i})^2+m\lambda\|\theta-\theta^{(0)}\|_2^2/2$
+                    # but here we set $loss(\theta)=\sum_{i=1}^t(f(x_{i,a_i}, \theta)-r_{i,a_i})^2/t+\lambda\|\theta-\theta^{(0)}\|_2^2/2/p$
+                    # to balance the terms in the loss function
+                    loss = self.criterion(output[:, 0], y_temp)  ## predict error
+                    # loss = torch.sum((output[:, 0] - y_temp) ** 2)
+                    ## regularization
+                    for key in self.mynn.W.keys():
+                        # loss += self.lambda_ * self.m * torch.sum((self.mynn.W[key] - self.mynn.W0[key]) ** 2) / 2
+                        loss += self.lambda_ * torch.sum((self.mynn.W[key] - self.mynn.W0[key]) ** 2) / 2 / self.p
+                    loss.backward()
+                    self.optimizer.step()
+
+                    # record the training process
+                    loss_.append(loss.cpu().detach().numpy())
+
+                if (jj + 1) % 20 == 0:
+                    print(f"{jj+1} training epoch, mean loss value is {np.mean(loss_)}")
 
         self.t += 1
 
@@ -357,11 +384,12 @@ class BestAgent:
         # K is Total number of actions,
         # T is Total number of periods
         # d is the dimension of context
+        # A is the context
         self.K = K
         self.T = T
         self.d = d
-        self.A = A
         self.t = 0  # marks the index of period
+        self.A = A
         self.history_reward = np.zeros(T)
         self.history_action = np.zeros(T)
         self.history_context = np.zeros((d, T))
@@ -372,11 +400,10 @@ class BestAgent:
 
         expected_reward = np.zeros(self.K)
         for kk in range(0, self.K):
-            context = context_list[:, kk]
-            innerproduct = self.A.dot(context)
-            expected_reward[kk] = 2 * np.exp(innerproduct) / (1 + np.exp(innerproduct))
+            context = context_list[kk, :]
+            expected_reward[kk] = context.transpose().dot(self.A.transpose().dot(self.A)).dot(context)
         ind = np.argmax(expected_reward, axis=None)
-        self.history_context[:, self.t] = context_list[:, ind]
+        self.history_context[:, self.t] = context_list[ind, :]
         self.history_action[self.t] = ind
         return ind
 
@@ -384,6 +411,15 @@ class BestAgent:
         # reward is the realized reward after we adopt policy, a scalar
         self.history_reward[self.t] = reward
         self.t = self.t + 1
+
+    def GetHistoryReward(self):
+        return self.history_reward
+
+    def GetHistoryAction(self):
+        return self.history_action
+
+    def GetHistoryContext(self):
+        return self.history_context
 
 
 class UniformAgent:
@@ -404,7 +440,7 @@ class UniformAgent:
         # the return value is the action we choose, represent the index of action, is a scalar
 
         ind = np.random.randint(0, high=self.K)  # we just uniformly choose an action
-        self.history_context[:, self.t] = context_list[:, ind]
+        self.history_context[:, self.t] = context_list[ind, :]
         return ind
 
     def Update(self, reward):
@@ -420,3 +456,60 @@ class UniformAgent:
 
     def GetHistoryContext(self):
         return self.history_context
+
+
+#%% unit test 1
+# from GameSetting import *
+
+# # Set the parameter of the game
+# np.random.seed(12345)
+# K = 4  # Total number of actions,
+# T = 5000  # Total number of periods
+# d = 6  # the dimension of context
+# A = np.random.normal(loc=0, scale=1, size=(d, d))
+
+# # Implement the algorithm
+# np.random.seed(12345)
+
+# # Set the parameter of the network
+# # the setting is based on the description of section 7.1 of the papaer
+# L = 2
+# m = 20
+# nu = 0.0  # {0.01, 0.1, 1}
+# lambda_ = 0.001  # {0.1, 1, 10}
+# eta = 0.01  # {0.001, 0.01, 0.1}
+# frequency = 50
+# batchsize = 50
+
+# neuralagent = NeuralAgent(K=K, T=T, d=d, L=L, m=m, nu=nu, lambda_=lambda_, eta=eta, frequency=frequency, batchsize=batchsize)
+# bestagent = BestAgent(K, T, d, A)
+# uniformagent = UniformAgent(K, T, d)
+# for tt in range(1, T + 1):
+#     # observe \{x_{t,a}\}_{a=1}^{k=1}
+#     context_list = SampleContext(d, K)
+#     realized_reward = GetRealReward(context_list, A)
+
+#     # neuralagent
+#     neural_ind = neuralagent.Action(context_list)  # make a decision
+#     neural_reward = realized_reward[neural_ind]  # play neural_ind-th arm and observe reward
+#     neuralagent.Update(neural_reward)
+
+#     # bestagent
+#     best_ind = bestagent.Action(context_list)  # make a decision
+#     best_reward = realized_reward[best_ind]  # play best_ind-th arm and observe reward
+#     bestagent.Update(best_reward)
+
+#     # uniformagent
+#     uniform_ind = uniformagent.Action(context_list)  # make a decision
+#     uniform_reward = realized_reward[uniform_ind]  # play uniform_ind-th arm and observe reward
+#     uniformagent.Update(uniform_reward)
+
+#     print(
+#         "round index {:d}; neural choose {:d}, reward is {:f}; best choose {:d}, reward is {:f}".format(
+#             tt,
+#             neural_ind,
+#             neural_reward,
+#             best_ind,
+#             best_reward,
+#         )
+#     )

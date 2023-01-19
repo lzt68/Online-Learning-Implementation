@@ -9,18 +9,15 @@ import numpy as np
 
 
 def SampleContext(d, K):
-    # according to the description, the context is uniformly distributed on a d-dimension sphere
-    # d is the dimension of context, a scalar
-    # K is the total number of arts, a scalar
+    """This function return context, as an K*d matrix, each row represents a context of action
 
-    # this function return context, as an d*K matrix, each column corresponds a context of action
+    Args:
+        d (int): Dimension of context
+        K (int): Number of arms
 
-    # context = np.random.normal(loc=0, scale=1, size=(d, K))
-    # length = np.sqrt( np.sum(context * context, axis = 0) )
-    # length = np.tile(length, (d, 1))
-    # context = context / length # each column represent a context
-    # return context
-
+    Returns:
+        context: an np.ndarray whose shape is (K, d), each row represents a context
+    """
     context = np.random.normal(loc=0, scale=1, size=(K, d // 2))
     length = np.sqrt(np.sum(context * context, axis=1, keepdims=True))
     context = np.tile(context, (1, 2))
@@ -30,17 +27,19 @@ def SampleContext(d, K):
 
 
 def GetRealReward(context, A):
-    # context is the context of arm, a d*K matrix
-    # A is the d*d matrix,
+    """Given the context, return the realized reward
 
-    # this function return the reward
+    Args:
+        context (np.ndarray): An np.ndarray whose shape is (K, d), each column represents a context of an arm
+        A (np.ndarray): The parameter of this reward function
 
-    # return context.transpose().dot(A.transpose().dot(A)).dot(context) + np.random.normal(loc=0, scale=1)
+    Returns:
+        reward: an np.ndarray whose shape is (K,), reward = context^T A^T A context + N(0, 0.05^2)
+    """
     if len(context.shape) == 1:
         return context.transpose().dot(A.transpose().dot(A)).dot(context) + np.random.normal(loc=0, scale=0.05)
     else:
         return np.diag(context.dot(A.transpose().dot(A)).dot(context.transpose())) + np.random.normal(loc=0, scale=0.05, size=context.shape[0])
-        # return np.diag(context.transpose().dot(A.transpose().dot(A)).dot(context))
 
 
 # unit test

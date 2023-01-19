@@ -280,9 +280,9 @@ class NeuralAgent:
         self.Z_t_minus1 = self.Z_t_minus1 + grad_parameter.dot(grad_parameter.transpose()) / self.m
 
         if (self.t + 1) % self.frequency == 0:  # train the network
-            # self.mynn = NeuralNetwork(d=self.d, L=self.L, m=self.m, device=self.device)  ## the same random seed will generate the same initial value
+            # initialize the network again
             for key in self.mynn.W.keys():
-                self.mynn.W[key].data = self.mynn.W0[key].data
+                self.mynn.W[key].data = deepcopy(self.mynn.W0[key].data)
 
             # for jj in range(self.t):  ## J=t at round t, but when we adopt such setting, the training process will be very slow
             for jj in range(np.minimum(self.t, 100)):
@@ -290,7 +290,7 @@ class NeuralAgent:
 
                 # shuffle the history and conduct SGD
                 history_index = np.arange(self.t + 1)
-                # np.random.shuffle(history_index)
+                np.random.shuffle(history_index)
                 temp_history_context = self.history_context[history_index, :]
                 temp_history_reward = self.history_reward[history_index]
                 for batch_index in range(0, self.t // self.batchsize + 1):

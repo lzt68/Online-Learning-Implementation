@@ -3,14 +3,9 @@ This folder contains the implementation of algorithm in *Neural Thompson Samplin
 
 ## File and Folder
 
-Thompson_Sampling.ipynb: this notebook contains the implementation of algorithms
-"Figure": this folder contains the screenshot of the paper, as illustration in Neural Thompson.ipynb
+"Source": The source file of neural Thompson Sampling agent and the reward function setting. Implemented by pytorch.
 
-GameSetting.py: this script contains the function to generate context and reward in each round
-
-Neural_Thompson_numpy.ipynb: this notebook implement the algorithm with using numpy to implement the neural network, without using pytorch or tensorflow or something like that
-Gradient_of_loss_function_and_neural_network.md: This file contains the mathematical derivation of backward propogation
-NeuralNetworkRelatedFunction.py: this script contains the necessary function to run a neural network, implemented by numpy
+Demo.ipynb: The demo of using the source file to conduct numeric experiments.
 
 ## Contact
 
