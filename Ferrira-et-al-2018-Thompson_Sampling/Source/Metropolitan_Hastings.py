@@ -28,7 +28,7 @@ def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345, ve
     x = np.zeros(d)
     if verbose:
         print("Warm Up phase")
-    for _ in tqdm(range(N - 1), disable=not verbose):
+    for tt in tqdm(range(N - 1), disable=not verbose):
         x = np.random.multivariate_normal(mean=x0, cov=np.eye(N=d))
         if g(x) >= g(x0):
             alpha = 1

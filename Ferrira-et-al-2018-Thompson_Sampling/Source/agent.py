@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import datetime
+from copy import deepcopy
 from typing import Callable
 from typing import Union
 
@@ -13,7 +14,7 @@ from Metropolitan_Hastings import MHSampling
 
 
 class ThompsonAgent_Fixed_Beta:
-    def __init__(self, K: int, N: int, M: int, T: int, P_list: np.ndarray, A: np.ndarray, I_0: np.ndarary):
+    def __init__(self, K: int, N: int, M: int, T: int, P_list: np.ndarray, A: np.ndarray, I_0: np.ndarray):
         """Implement the 1st algorithm in Ferrira. We assume the prior distribution is uniform(0, 1),
         then we can derive the exact formula of posterior distribution,
         which is beta, to sample theta and further generate demand
@@ -25,7 +26,7 @@ class ThompsonAgent_Fixed_Beta:
             T (int): Total rounds
             P_list (np.ndarray): The price of each product, whose shape is (K, N)
             A (np.ndarray): The unit cost of each product, whose shape is (N, M)
-            I_0 (np.ndarary): Initial resource, whose shape is (M,)
+            I_0 (np.ndarray): Initial resource, whose shape is (M,)
         """
         self.K = K
         self.N = N
@@ -166,7 +167,7 @@ class ThompsonAgent_Fixed_Beta:
 
 
 class ThompsonAgent_Fixed_MH:
-    def __init__(self, K: int, N: int, M: int, T: int, P_list: np.ndarray, A: np.ndarray, I_0: np.ndarary, prior_list: Union[list, str] = "Default", MH_N: int = 100):
+    def __init__(self, K: int, N: int, M: int, T: int, P_list: np.ndarray, A: np.ndarray, I_0: np.ndarray, prior_list: Union[list, str] = "Default", MH_N: int = 5000):
         """Implement the 1st algorithm in Ferrira. We assume the prior distribution of the theta is unifrom(0, 1).
         Though we can derive the explicit formula of the distribution,
         we still use the Metropolitan-Hastings algorithm to sample theta
@@ -178,7 +179,7 @@ class ThompsonAgent_Fixed_MH:
             T (int): Total rounds
             P_list (np.ndarray): The price of each product, whose shape is (K, N)
             A (np.ndarray): The unit cost of each product, whose shape is (N, M)
-            I_0 (np.ndarary): Initial resource, whose shape is (M,)
+            I_0 (np.ndarray): Initial resource, whose shape is (M,)
             prior_list (Union[list, str], optional): The list containing the prior distribution of the theta, the length of list should be K.
             Defaults to "Default", which is unifrom distribution for all the arms
             MH_N (int, optional): The length of warm up phase in MH sampling. Defaults to 100.
@@ -195,7 +196,7 @@ class ThompsonAgent_Fixed_MH:
             assert len(prior_list) == K, "The number of the prior distributions doesn't match with arm number"
             self.prior_list = prior_list
         elif prior_list == "Default":
-            self.prior_list = [lambda x: 1.0 if np.all(x <= 1.0 and x >= 0.0) else 0.0] * K
+            self.prior_list = [lambda x: 1.0 if np.all(x <= 1.0) and np.all(x >= 0.0) else 0.0] * K
 
         # initialize history
         self.H_P = np.zeros(shape=T)  # the index of pricing vector we used in each period
@@ -236,9 +237,11 @@ class ThompsonAgent_Fixed_MH:
         # H_alpha[t-1, :, :], H_beta[t-1, :, :] is the history data from 0 to t
         # H_theta[t-1, :, :] is the sample theta we used in round t
         self.H_theta[self.t - 1, :, :] = self.sample_theta()
+        self.H_theta[self.t - 1, :, :] = np.maximum(self.H_theta[self.t - 1, :, :], np.zeros((self.K, self.N)))
+        self.H_theta[self.t - 1, :, :] = np.minimum(self.H_theta[self.t - 1, :, :], np.ones((self.K, self.N)))
 
         # first step, calculate the mean demand given sample theta
-        demand_mean = self.H_theta[self.t - 1, :, :]
+        demand_mean = deepcopy(self.H_theta[self.t - 1, :, :])
 
         # second step, optimize a linear function
         model = pyscipopt.Model("Optimization in Round {:d}".format(self.t))
@@ -326,8 +329,10 @@ class ThompsonAgent_Fixed_MH:
             def g(x):
                 density = self.prior_list[kk](x)
                 density *= np.prod(x ** self.H_alpha[self.t - 1, kk, :]) * np.prod((1.0 - x) ** self.H_beta[self.t - 1, kk, :])
+                return density
 
-            theta[kk, :] = MHSampling(N=self.MH_N, M=1, d=self.N, g=g, verbose=False)[0, :]
+            # make each sampling adopt   different random seed
+            theta[kk, :] = MHSampling(N=self.MH_N, M=1, d=self.N, g=g, verbose=False, random_seed=kk + self.t)[0, :]
         return theta
 
 
@@ -386,3 +391,15 @@ class UniformAgent:
 
 
 #%% unit test 1
+# K = 2
+# M = 2
+# N = 2
+# T = 10
+# MH_N = 5000
+# P_list = np.array([29.9, 34.9])
+# A = np.ones((N, M))
+# agent = ThompsonAgent_Fixed_MH(K=K, N=N, M=M, T=T, P_list=P_list, A=A, I_0=np.ones(M) * T * 2, MH_N=MH_N)
+# agent.H_alpha[0, :, :] = np.array([[1, 2], [1, 1]]) * 100
+# agent.H_beta[0, :, :] = np.array([[1, 1], [2, 2]]) * 100
+# theta = agent.sample_theta()
+# print(theta)
