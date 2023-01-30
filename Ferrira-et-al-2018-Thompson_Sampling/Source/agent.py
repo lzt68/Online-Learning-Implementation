@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append("./Source/")
+
 import numpy as np
 import pandas as pd
 import datetime
@@ -8,9 +12,6 @@ from typing import Union
 import pyscipopt
 from pyscipopt import quicksum
 from Metropolitan_Hastings import MHSampling
-
-# random_seed = 888
-# np.random.seed(random_seed)
 
 
 class ThompsonAgent_Fixed_Beta:

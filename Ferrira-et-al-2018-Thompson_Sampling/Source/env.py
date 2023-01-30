@@ -1,14 +1,14 @@
 import numpy as np
 
 
-class Environment:
-    # we use an object as environment to cooperate with agents
+class Environment_Bernoulli:
+    # the demand follows Bernoulli Distribution
     def __init__(self, theta, K, N):
         self.theta = theta
         self.K = K
         self.N = N
 
-    def Response(self, price_offered_index):
+    def response(self, price_offered_index):
         # vectorize binomial sample function to accelerate
         mybinomial = np.vectorize(np.random.binomial)
         if price_offered_index < self.K + 1:
