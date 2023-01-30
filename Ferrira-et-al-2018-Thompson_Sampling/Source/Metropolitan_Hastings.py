@@ -1,11 +1,12 @@
 import numpy as np
+from tqdm import tqdm
 from copy import deepcopy
 from scipy.stats import norm, multivariate_normal
 from typing import Callable
 from typing import Union
 
 
-def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345) -> np.ndarray:
+def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345, verbose=False) -> np.ndarray:
     """Implementation of Metropolitan Hastings Sampling
 
     Args:
@@ -16,6 +17,7 @@ def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345) ->
         g (Callable): The callable function, which is propotion to the actual density function of distribution.
             Its input is an array whose shape is (d,)
         random_seed (int, optional): Random seed
+        verbose (bool, optional): Control whether output the progress of sampling. Defaults to False, no output
 
     Returns:
         np.ndarray: The list of sampling points, whose shape is (M, d)
@@ -24,8 +26,9 @@ def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345) ->
 
     x0 = np.zeros(d)
     x = np.zeros(d)
-    # rv = multivariate_normal(x0, np.eye(N=d))
-    for _ in range(N - 1):
+    if verbose:
+        print("Warm Up phase")
+    for _ in tqdm(range(N - 1), disable=not verbose):
         x = np.random.multivariate_normal(mean=x0, cov=np.eye(N=d))
         if g(x) >= g(x0):
             alpha = 1
@@ -36,8 +39,10 @@ def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345) ->
 
     sampling_points = np.zeros((M, d))
     sampling_points[0, :] = x0
-    count = 1
-    while count < M:
+    if verbose:
+        print("Sampling phase")
+
+    for count in tqdm(range(1, M), disable=not verbose):
         x = np.random.multivariate_normal(mean=x0, cov=np.eye(N=d))
         if g(x) >= g(x0):
             alpha = 1
@@ -45,8 +50,7 @@ def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345) ->
             alpha = g(x) / g(x0)
         if np.random.uniform(low=0.0, high=1.0) < alpha:
             x0 = x
-        sampling_points[count - 1, :] = deepcopy(x0)
-        count += 1
+        sampling_points[count, :] = deepcopy(x0)
 
     return sampling_points
 
@@ -94,6 +98,28 @@ def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345) ->
 # # real_dist = np.exp(-((x - mu) ** 2) / 2 / sigma**2) / np.sqrt(2 * np.pi) / sigma
 # # real_dist = np.array([g(xx) * 2 for xx in x])
 # real_dist = np.array([g(xx) / 2 for xx in x])
+# plt.plot(x, real_dist, label="real")
+# plt.legend()
+# plt.show()
+
+#%% unit test 3
+# from scipy.stats import beta
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+
+# a = 200.0
+# b = 500.0
+# rv = beta(a, b)
+
+# N = 100
+# M = 5000
+# g = rv.pdf
+# sampling_points = MHSampling(N=N, M=M, d=1, g=g, verbose=True)
+# sns.set_style("whitegrid")
+# sns.kdeplot(sampling_points[:, 0], label="approximate")
+
+# x = np.linspace(0, 5, 1000)
+# real_dist = np.array([g(xx) for xx in x])
 # plt.plot(x, real_dist, label="real")
 # plt.legend()
 # plt.show()
