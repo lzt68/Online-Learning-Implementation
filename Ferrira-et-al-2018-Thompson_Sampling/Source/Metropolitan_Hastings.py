@@ -1,9 +1,9 @@
 import numpy as np
 from tqdm import tqdm
 from copy import deepcopy
-from scipy.stats import norm, multivariate_normal
 from typing import Callable
 from typing import Union
+from numpy.random import Generator, PCG64
 
 
 def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345, verbose=False) -> np.ndarray:
@@ -22,19 +22,19 @@ def MHSampling(N: int, M: int, d: int, g: Callable, random_seed: int = 12345, ve
     Returns:
         np.ndarray: The list of sampling points, whose shape is (M, d)
     """
-    np.random.seed(random_seed)
+    random_generator = Generator(PCG64(random_seed))
 
     x0 = np.zeros(d)
     x = np.zeros(d)
     if verbose:
         print("Warm Up phase")
     for tt in tqdm(range(N - 1), disable=not verbose):
-        x = np.random.multivariate_normal(mean=x0, cov=np.eye(N=d))
+        x = random_generator.multivariate_normal(mean=x0, cov=np.eye(N=d))
         if g(x) >= g(x0):
             alpha = 1
         else:
             alpha = g(x) / g(x0)
-        if np.random.uniform(low=0.0, high=1.0) < alpha:
+        if random_generator.uniform(low=0.0, high=1.0) < alpha:
             x0 = x
 
     sampling_points = np.zeros((M, d))
