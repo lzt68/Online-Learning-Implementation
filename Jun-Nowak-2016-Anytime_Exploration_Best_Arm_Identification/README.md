@@ -26,3 +26,6 @@ We aim to reproduce the figure 2 sparse case in Jun & Kowak 2016
   + class Env_FixedConsumption_Gaussian
     In this environment, the reward follows gaussian distribution with variance 1/4,
     The consumption is fixed, all equal to 1
+
+Experiment.ipynb: Reproduce Figure 2 Sparse Case in the paper. But I met some problems regarding the curve of doubling-trick-sequential-halving
+
