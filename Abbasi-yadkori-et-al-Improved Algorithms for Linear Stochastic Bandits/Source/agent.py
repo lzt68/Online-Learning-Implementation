@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import linalg
 from copy import deepcopy
 
 
@@ -34,9 +35,24 @@ class OFUL_Agent(object):
         self.S = S
 
         self.V = np.eye(d) * lambda_
+        self.H_action = list()  # history of reward
+        self.H_reward = list()  # history of action
+
+        self.t = 0
 
     def action(self):
-        pass
+        theta = self.get_theta()
+        theta_l2 = linalg.norm(theta, ord=2)
+        if np.abs(theta_l2) < 1e-4:
+            act = np.zeros(self.d)
+        else:
+            act = theta / theta_l2
+        return act
 
-    def update(self):
-        pass
+    def update(self, reward):
+        self.t += 1
+
+    def get_theta(self):
+        # solve the problem
+        # \tilde{\theta}_t=\arg\max_{\theta\in C_{t-1}}\|\theta\|_2
+        return np.zeros(self.d)

@@ -26,4 +26,3 @@ $$
 \Rightarrow &\tilde{\theta}_t = \arg\max_{\theta\in C_{t-1}} <\frac{\theta}{\|\theta\|_2},\theta>=\arg\max_{\theta\in C_{t-1}}\|\theta\|_2, X_t=\frac{\tilde{\theta}_t}{\|\tilde{\theta}_t\|_2}\\
 \end{align*}
 $$
-Then this is a second-order-programming problem.
