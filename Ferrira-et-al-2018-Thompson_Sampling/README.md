@@ -22,6 +22,10 @@ Thompson_Sampling.ipynb: this notebook contains the implementation of algorithms
 "Source": The source file of agent and environment
 
 + agent.py: Implement the source file of the first two algorithm in Ferrira-et-al-2018
+  + ThompsonAgent_Fixed_Beta: Sample theta form Beta Distribution, use $c_j$ instead of $\frac{I_j(t-1)}{T-t+1}$
+  + ThompsonAgent_Fixed_MH: Sample theta by Metropolitan-Hastings Algorithm, use $c_j$ instead of $\frac{I_j(t-1)}{T-t+1}$
+  + ThompsonAgent_Update_Beta: Sample theta form Beta Distribution, use $\frac{I_j(t-1)}{T-t+1}$ instead of $c_j$
+  + ThompsonAgent_Update_MH: Sample theta by Metropolitan-Hastings Algorithm, use $\frac{I_j(t-1)}{T-t+1}$ instead of $c_j$
 + env.py: Implement the source file of the environment of Bernoulli Reward 
 + Metropolitan_Hastings.py: Implement the Metropolitan Hastings Sampling algorithm, which is used to sample value from posterior distribution. Please check the details of this algorithm in Sawyer_The Metropolitan-Hastings Algorithm and Extensions.pdf
 
