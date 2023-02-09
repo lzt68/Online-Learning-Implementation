@@ -51,3 +51,56 @@ and finally, if $\lambda_{\min}(V)\ge \max\{1, L^2\}$ then
 $$
 \sum_{t=1}^n \|X_t\|_{\bar{V}_{t-1}^{-1}}^2\le 2\log\frac{\det\bar{V}_n}{\det V}
 $$
+
+
+# Find the point with maximum l2 norm on the ellipsoid
+
+$$
+\begin{array}{cc}
+\max & x^Tx \\
+s.t. & (x-x_0)^T A(x-x_0)\le\beta
+\end{array}
+$$
+
+where $x_0$, $A$, $\beta$ are known to us.
+
+Define $L(x, \lambda) = x^Tx - \lambda(\beta-(x-x_0)^T A(x-x_0))$, then $\frac{\partial L}{\partial x}=0, \frac{\partial L}{\partial \lambda}=0$ are equivalent to
+$$
+\begin{align*}
+2x+2\lambda A(x-x_0)=&0\\
+\beta-(x-x_0)^T A(x-x_0)=&0
+\end{align*}
+$$
+
+$$
+\begin{align*}
+2x+2\lambda Ax -2\lambda Ax_0=&0\\
+\beta=&x^Tx-2x_0^TA x+x_0^Tx_0
+\end{align*}
+$$
+
+Let $x=x^{(0)}+\theta_x$, $\lambda=\lambda^{(0)}+\theta_{\lambda}$, we have
+$$
+\bigg\{
+\begin{align*}
+(x^{(0)}+\theta_x)+(\lambda^{(0)}+\theta_{\lambda}) A(x^{(0)}+\theta_x) -(\lambda^{(0)}+\theta_{\lambda}) Ax_0=&0\\
+(x^{(0)}+\theta_x)^T(x^{(0)}+\theta_x)-2x_0^TA(x^{(0)}+\theta_x)+x_0^Tx_0=\beta
+\end{align*}
+$$
+
+$$
+\begin{align*}
+&(x^{(0)}+\theta_x)+(\lambda^{(0)}+\theta_{\lambda}) A(x^{(0)}+\theta_x) -(\lambda^{(0)}+\theta_{\lambda}) Ax_0=0\\
+\Rightarrow&x^{(0)}+\theta_x+\lambda^{(0)}Ax^{(0)}+\lambda^{(0)}A\theta_x+\theta_{\lambda}Ax^{(0)}+\theta_{\lambda}A\theta_x-\lambda^{(0)}Ax_0-\theta_{\lambda}Ax_0=0\\
+\Rightarrow& (I+\lambda^{(0)}A)\theta_x+(Ax^{(0)}-Ax_0)\theta_{\lambda}+(\theta_{\lambda}A\theta_x)=-x^{(0)}-\lambda^{(0)}Ax^{(0)}+\lambda^{(0)}Ax_0
+\end{align*}
+$$
+
+$$
+\begin{align*}
+&(x^{(0)}+\theta_x)^T(x^{(0)}+\theta_x)-2x_0^TA(x^{(0)}+\theta_x)+x_0^Tx_0=\beta\\
+\Rightarrow& x^{(0)T}x^{(0)}+2x^{(0)T}\theta_x+\theta_x^T\theta_x-2x_0^TAx^{(0)}-2x_0^TA\theta_x+x_0^Tx_0=\beta\\
+\Rightarrow&(2x^{(0)T}-2x_0^TA)\theta_x+(\theta_x^T\theta_x)=\beta-x^{(0)T}x^{(0)}+2x_0^TAx^{(0)}-x_0^Tx_0
+\end{align*}
+$$
+

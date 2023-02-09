@@ -9,6 +9,8 @@ This folder tried to reproduce the figure 2 in the Abbasi-yadkori et al.2011, wh
 
   https://repository.upenn.edu/statistics_papers/101/
 
+## Find the point with maximal $l_2$ norm on the ellipsoid
+
 The major challenge of implementing this topic is the following step
 $$
 (X_t, \tilde{\theta}_t)=\arg\max_{(x,\theta)\in D_t\times C_{t-1}} <x,\theta>
@@ -24,5 +26,24 @@ $$
 \begin{align*}
 &(X_t, \tilde{\theta}_t)=\arg\max_{(x,\theta)\in D_t\times C_{t-1}} <x,\theta>\\
 \Rightarrow &\tilde{\theta}_t = \arg\max_{\theta\in C_{t-1}} <\frac{\theta}{\|\theta\|_2},\theta>=\arg\max_{\theta\in C_{t-1}}\|\theta\|_2, X_t=\frac{\tilde{\theta}_t}{\|\tilde{\theta}_t\|_2}\\
+\end{align*}
+$$
+In the case of 2-d, $C_{t}=\{x:(x-x_0)^TA_t(x-x_0)=\beta_t\}$, Denote $A_t=U \Lambda U^T$, where $\Lambda=\left[\begin{array}{l}\lambda_1&0\\ 0&\lambda_2 \end{array}\right]$, then 
+$$
+\begin{align*}
+&(x-x_0)^TA_t(x-x_0)=\beta_t\\
+\Leftrightarrow& (x-x_0)^TU \left[\begin{array}{l}\lambda_1&0\\ 0&\lambda_2 \end{array}\right] U^T(x-x_0)=\beta_t
+\end{align*}
+$$
+Let $U^T(x-x_0)=\left[\begin{array}{c}\frac{\sqrt{\beta_t}\sin t}{\sqrt{\lambda_1}}\\ \frac{\sqrt{\beta_t}\cos t}{\sqrt{\lambda_2}}\end{array}\right]$, which is $x=U\left[\begin{array}{c}\frac{\sqrt{\beta_t}\sin t}{\sqrt{\lambda_1}}\\ \frac{\sqrt{\beta_t}\cos t}{\sqrt{\lambda_2}}\end{array}\right]+x_0$, then we have
+$$
+\begin{align*}
+\|x\|_2^2&=\|x_0\|_2^2 + 2\left[\begin{array}{c}\frac{\sqrt{\beta_t}\sin t}{\sqrt{\lambda_1}}& \frac{\sqrt{\beta_t}\cos t}{\sqrt{\lambda_2}}\end{array}\right]U^Tx_0+\frac{\beta_t \sin^2t}{\lambda_1}+\frac{\beta_t \cos^2t}{\lambda_2}
+\end{align*}
+$$
+Then
+$$
+\begin{align*}
+\frac{\partial \|x\|_2^2}{\partial t}=2\left[\begin{array}{c}\frac{\sqrt{\beta_t}\cos t}{\sqrt{\lambda_1}}& \frac{-\sqrt{\beta_t}\sin t}{\sqrt{\lambda_2}}\end{array}\right]U^Tx_0+\frac{\beta_t 2\sin t\cos t}{\lambda_1}-\frac{\beta_t 2\cos t\sin t}{\lambda_2}
 \end{align*}
 $$
