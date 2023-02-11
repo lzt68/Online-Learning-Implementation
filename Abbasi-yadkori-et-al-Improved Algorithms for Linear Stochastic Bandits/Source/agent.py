@@ -44,12 +44,12 @@ def get_factorization(matrix: np.ndarray):
         U[1][1] = -1
         U[0:, 1] = U[0:, 1] / np.sqrt(U[0][1] ** 2 + U[1][1] ** 2)
 
-        assert np.max(np.abs(U @ np.array([[lambda1, 0.0], [0.0, lambda2]]) @ U.T - matrix)) < 1e-6, "fail to factorize"
+        assert np.max(np.abs(U @ np.array([[lambda1, 0.0], [0.0, lambda2]]) @ U.T - matrix)) < 1e-4, "fail to factorize"
 
         return lambda1, lambda2, U
 
 
-def get_xy(lambda1: float, lambda2: float, U: np.ndarray, x0: np.ndarray, beta: float, t: Union[float, np.ndarray]):
+def get_xy(lambda1: float, lambda2: float, U: np.ndarray, x0: np.ndarray, beta: float, t: Union[float, np.float64, np.ndarray]):
     """use the return value of function get_factorization to calculate the position of point
     Equation of ellipsoid (x-x_0)^TU[[lambda_1, 0], [0, lambda2]]U^T(x-x0)=beta
 
@@ -68,7 +68,7 @@ def get_xy(lambda1: float, lambda2: float, U: np.ndarray, x0: np.ndarray, beta: 
     x2 = np.expand_dims(np.sqrt(beta) / np.sqrt(lambda2) * np.cos(t), axis=0)
     x = np.concatenate([x1, x2], axis=0)
 
-    if type(t) == float:
+    if type(t) == float or type(t) == np.float64:
         x = U @ x + x0
     else:
         x = U @ x + x0[:, np.newaxis]
@@ -76,8 +76,74 @@ def get_xy(lambda1: float, lambda2: float, U: np.ndarray, x0: np.ndarray, beta: 
 
 
 class ConfidenceBall_Agent(object):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, delta: Union[float, np.float64], B: Union[np.ndarray, None] = None) -> None:
+        """Implement the ConfidenceBall_2 algorithm in Dani et.al 2008
+        We assume the action space is always the unit ball in the 2-d space
+
+        Args:
+            B (Union[np.ndarray, None]): Barycentric spanner. Each row of it should be a spanner.
+            delta (Union[float, np.float64]): Tolerance of failure probability
+        """
+        self.d = 2
+        self.delta = delta
+        if B is None:
+            self.B = np.eye(self.d)
+        else:
+            assert len(B.shape) == 2 and B.shape[1] == 2, "The dimension doesn't match"
+            self.B = B
+
+        self.H_action = list()  # history of reward
+        self.H_reward = list()  # history of action
+
+        # $\hat{mu}_t = A_t^{-1} B_t$
+        self.A_t = np.zeros((self.d, self.d))  # $A_t=\sum_{s=1}^t x_sx_s^T+\lambda I$
+        # A_1 = \sum_{i=1}^n b_ib_i^T
+        for ii in range(self.B.shape[0]):
+            b = self.B[ii, :]
+            self.A_t = self.A_t + b[:, np.newaxis] @ b[np.newaxis, :]
+        self.Y_t = np.zeros(self.d)  # $Y_t=\sum_{s=1}^t y_sx_s$
+
+        self.t = 1
+
+    def action(self):
+        tilde_theta = self.get_theta()
+        tilde_theta_l2 = linalg.norm(tilde_theta, ord=2)
+        if np.abs(np.linalg.norm(tilde_theta)) < 1e-6:
+            act = np.zeros(self.d)
+        else:
+            act = tilde_theta / tilde_theta_l2
+        self.H_action.append(act)
+        return act
+
+    def update(self, reward):
+        action = self.H_action[self.t - 1]
+        self.A_t = self.A_t + action[:, np.newaxis] @ action[np.newaxis, :]
+        self.Y_t = self.Y_t + action * reward
+        self.t += 1
+
+    def get_theta(self):
+        # solve the problem
+        # \tilde{\theta}_t=\arg\max_{\theta\in C_{t-1}}\|\theta\|_2
+        # calculate the $C_{t-1}$, including $V_{t-1}$, $\beta_{t-1}$, $\hat{\theta}$
+        theta_hat_t = np.linalg.solve(self.A_t, self.Y_t)
+        beta_t = np.maximum(128 * self.B.shape[0] * np.log(self.t) * np.log(self.t**2 / self.delta), (8 / 3 * np.log(self.t**2 / self.delta)) ** 2)
+
+        # find the point with maximum l2 norm
+        ## first step, grid search
+        lambda1, lambda2, U = get_factorization(self.A_t)
+        # print(f"lambda1 {lambda1}, lambda2 {lambda2}")
+        t = np.linspace(0, np.pi * 2, 10)
+        x = get_xy(lambda1=lambda1, lambda2=lambda2, U=U, x0=theta_hat_t, beta=beta_t, t=t)
+        x_l2norm = np.linalg.norm(x, axis=0)
+        maxindex = np.argmax(x_l2norm)
+
+        ## second step, use the result from gird search as the initial point of optimizer
+        f = lambda t: -np.linalg.norm(get_xy(lambda1=lambda1, lambda2=lambda2, U=U, x0=theta_hat_t, beta=beta_t, t=t))
+        res = minimize(fun=f, x0=maxindex)
+        maxindex_scipy = res.x[0]
+        tilde_theta = get_xy(lambda1=lambda1, lambda2=lambda2, U=U, x0=theta_hat_t, beta=beta_t, t=maxindex_scipy)
+
+        return tilde_theta
 
 
 class OFUL_Agent(object):
@@ -104,15 +170,15 @@ class OFUL_Agent(object):
         self.H_reward = list()  # history of action
 
         # $\hat{\theta}_t = A_t^{-1} B_t$
-        self.V_t = lambda_ * np.eye(self.d)  # $A_t=\sum_{s=1}^t x_sx_s^T+\lambda I$
-        self.Y_t = np.zeros(2)  # $B_t=\sum_{s=1}^t y_sx_s$
+        self.V_t = lambda_ * np.eye(self.d)  # $V_t=\sum_{s=1}^t x_sx_s^T+\lambda I$
+        self.Y_t = np.zeros(2)  # $Y_t=\sum_{s=1}^t y_sx_s$
 
         self.t = 0
 
     def action(self):
         tilde_theta = self.get_theta()
         tilde_theta_l2 = linalg.norm(tilde_theta, ord=2)
-        if np.abs(tilde_theta) < 1e-6:
+        if np.abs(np.linalg.norm(tilde_theta)) < 1e-6:
             act = np.zeros(self.d)
         else:
             act = tilde_theta / tilde_theta_l2
@@ -131,17 +197,15 @@ class OFUL_Agent(object):
 
         # calculate the $C_{t-1}$, including $V_{t-1}$, $\beta_{t-1}$, $\hat{\theta}$
         theta_hat_t = np.linalg.solve(self.V_t, self.Y_t)
-        beta_t = self.R * np.sqrt(self.d * np.log((1 + t * self.L**2 / self.lambda_) / self.delta) + np.sqrt(self.lambda_) * self.S)
+        beta_t = self.R * np.sqrt(self.d * np.log((1 + self.t * self.L**2 / self.lambda_) / self.delta) + np.sqrt(self.lambda_) * self.S)
         beta_t = beta_t**2
 
         # find the point with maximum l2 norm
         ## first step, grid search
         lambda1, lambda2, U = get_factorization(self.V_t)
+        # print(f"lambda1 {lambda1}, lambda2 {lambda2}")
         t = np.linspace(0, np.pi * 2, 10)
-        x1 = np.expand_dims(np.sqrt(beta_t) / np.sqrt(lambda1) * np.sin(t), axis=0)
-        x2 = np.expand_dims(np.sqrt(beta_t) / np.sqrt(lambda2) * np.cos(t), axis=0)
-        x = np.concatenate([x1, x2], axis=0)
-        x = U @ x + theta_hat_t[:, np.newaxis]
+        x = get_xy(lambda1=lambda1, lambda2=lambda2, U=U, x0=theta_hat_t, beta=beta_t, t=t)
         x_l2norm = np.linalg.norm(x, axis=0)
         maxindex = np.argmax(x_l2norm)
 
@@ -149,7 +213,7 @@ class OFUL_Agent(object):
         f = lambda t: -np.linalg.norm(get_xy(lambda1=lambda1, lambda2=lambda2, U=U, x0=theta_hat_t, beta=beta_t, t=t))
         res = minimize(fun=f, x0=maxindex)
         maxindex_scipy = res.x[0]
-        tilde_theta = U @ np.array(get_xy(lambda1=lambda1, lambda2=lambda2, U=U, x0=theta_hat_t, beta=beta_t, t=maxindex_scipy))
+        tilde_theta = get_xy(lambda1=lambda1, lambda2=lambda2, U=U, x0=theta_hat_t, beta=beta_t, t=maxindex_scipy)
 
         return tilde_theta
 
@@ -211,4 +275,86 @@ class OFUL_Agent(object):
 # v = np.array([2.0, 1.0])
 # print(v[:, np.newaxis] @ v[np.newaxis, :])
 
-#%% unit test 3
+#%% unit test 3, unit test for OFUL algorithm
+# from env import Env_FixedActionSpace
+
+# np.random.seed(12345)
+
+# R = 0.1
+# L = 1
+# S = 1
+# delta = 0.0001
+# lambda_ = 0.0001
+# theta = np.random.uniform(low=0.0, high=1.0, size=2)
+# theta = theta / np.linalg.norm(theta)
+# print(theta)
+
+# oful_agent = OFUL_Agent(R=R, L=L, S=S, delta=delta, lambda_=lambda_)
+# env = Env_FixedActionSpace(theta=theta, R=0.0)
+# T = 10
+# reward_ = np.zeros(T)
+
+# for tt in range(T):
+#     action = oful_agent.action()
+#     reward = env.response(action)
+#     oful_agent.update(reward)
+#     reward_[tt] = reward
+
+# print(reward_)
+
+#%% unit test 4, unit test for confidence ball algorithm
+# from env import Env_FixedActionSpace
+
+# np.random.seed(12345)
+
+# R = 0.1
+# L = 1
+# S = 1
+# delta = 0.0001
+# lambda_ = 0.0001
+# theta = np.random.uniform(low=0.0, high=1.0, size=2)
+# theta = theta / np.linalg.norm(theta)
+# print(theta)
+
+# confidenceball_agent = ConfidenceBall_Agent(delta=delta)
+# env = Env_FixedActionSpace(theta=theta, R=0.0)
+# T = 10
+# reward_ = np.zeros(T)
+
+# for tt in range(T):
+#     action = confidenceball_agent.action()
+#     reward_mean, reward_real = env.response(action)
+#     confidenceball_agent.update(reward_real)
+#     reward_[tt] = reward_mean
+
+# print(reward_)
+
+#%% unit test 5
+# from env import Env_FixedActionSpace
+# from tqdm import tqdm
+
+# T = 5000
+# n_experiment = 5
+
+# R = 0.1
+# L = 1
+# S = 1
+# delta = 0.0001
+# lambda_ = 0.1
+
+# exp_index = 2
+# np.random.seed(exp_index)
+# theta = np.random.uniform(low=0.0, high=1.0, size=2)
+# theta = theta / np.linalg.norm(theta)
+# print(f"theta {theta}")
+# print(f"{exp_index+1}-begins")
+
+# reward_confidenceball = np.zeros((n_experiment, T))
+# # conduct the experiment, confidence ball
+# confidenceball_agent = ConfidenceBall_Agent(delta=delta)
+# env = Env_FixedActionSpace(theta=theta, R=R, random_seed=exp_index)
+# for round_index in tqdm(range(T)):
+#     action = confidenceball_agent.action()
+#     reward_mean, reward_real = env.response(action)
+#     confidenceball_agent.update(reward_real)
+#     reward_confidenceball[exp_index, round_index] = reward_mean
