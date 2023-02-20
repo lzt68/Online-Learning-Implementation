@@ -26,6 +26,8 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "Karnin-Koren-Somekh-2013-Almost_Optimal_Exploration_Best_Arm_Identification": http://proceedings.mlr.press/v28/karnin13.pdf
 
+"Abbasi-yadkori-et-al-Improved Algorithms for Linear Stochastic Bandits": https://papers.nips.cc/paper/2011/hash/e1d5be1c7f2f456670de3d53c7b54f4a-Abstract.html
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu

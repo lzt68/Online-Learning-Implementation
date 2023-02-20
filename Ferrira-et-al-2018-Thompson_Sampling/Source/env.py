@@ -22,7 +22,7 @@ class Environment_Bernoulli:
         return demand
 
 
-# #%% unit test 1
+#%% unit test 1
 # from numpy.random import Generator, PCG64
 
 # rng1 = Generator(PCG64(12345))
