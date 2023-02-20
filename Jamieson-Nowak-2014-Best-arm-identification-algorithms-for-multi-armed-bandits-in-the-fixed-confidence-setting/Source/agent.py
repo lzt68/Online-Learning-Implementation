@@ -51,8 +51,8 @@ class ActionElimination_agent(object):
             upper_bound = self.mean_reward_[self.survive_arms - 1] + C
             lower_bound = self.mean_reward_[self.survive_arms - 1] - C
 
-            reference_arm = self.survive_arms[np.argmax(upper_bound)]
-            self.survive_arms = np.array([kk for kk in self.survive_arms if upper_bound[kk - 1] > lower_bound[reference_arm - 1]])
+            reference_arm = np.argmax(upper_bound)
+            self.survive_arms = np.array([self.survive_arms[kk] for kk in range(len(self.survive_arms)) if upper_bound[kk] > lower_bound[reference_arm]])
 
             self.pulling_list = list(self.survive_arms)
 
@@ -206,17 +206,18 @@ class LUCB_agent(object):
 
     def predict(self):
         assert self.if_stop(), "The algorithm doesn't stop"
-        max_pulling_times_index = np.argmax(self.pulling_times_) + 1
-        return max_pulling_times_index
+        max_mean_reward_index = np.argmax(self.mean_reward_) + 1
+        return max_mean_reward_index
 
 
 #%% unit test 1, debug ActionElimination_agent
 # from env import Environment_Gaussian
 
 # K = 6
-# reward = np.linspace(1.0, 0.0, 6)
+# reward = np.linspace(1.0, 0.0, K)
+# random_seed = 10
 
-# env = Environment_Gaussian(rlist=reward, K=K)
+# env = Environment_Gaussian(rlist=reward, K=K, random_seed=random_seed)
 # agent = ActionElimination_agent(K=K)
 # maximal_running = 10000
 # count = 0
@@ -233,8 +234,8 @@ class LUCB_agent(object):
 #%% unit test 2, debug UCB_agent
 # from env import Environment_Gaussian
 
-# K = 6
-# reward = np.linspace(1.0, 0.0, 6)
+# K = 10
+# reward = np.linspace(1.0, 0.0, K)
 
 # env = Environment_Gaussian(rlist=reward, K=K)
 # agent = UCB_agent(K=K)
@@ -253,8 +254,8 @@ class LUCB_agent(object):
 #%% unit test 3, debug LUCB_agent
 # from env import Environment_Gaussian
 
-# K = 6
-# reward = np.linspace(1.0, 0.0, 6)
+# K = 11
+# reward = np.linspace(1.0, 0.0, K)
 
 # env = Environment_Gaussian(rlist=reward, K=K)
 # agent = LUCB_agent(K=K)
