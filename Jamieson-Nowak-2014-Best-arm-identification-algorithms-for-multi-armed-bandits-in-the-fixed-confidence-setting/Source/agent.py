@@ -3,12 +3,9 @@ import sys
 sys.path.append("./Source/")
 
 import numpy as np
-from numpy.random import Generator, PCG64
-import pandas as pd
 from copy import deepcopy
 from typing import Callable
 from typing import Union
-
 import heapq
 
 
@@ -234,7 +231,7 @@ class LUCB_agent(object):
 #%% unit test 2, debug UCB_agent
 # from env import Environment_Gaussian
 
-# K = 10
+# K = 6
 # reward = np.linspace(1.0, 0.0, K)
 
 # env = Environment_Gaussian(rlist=reward, K=K)
