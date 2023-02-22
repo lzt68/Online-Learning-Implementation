@@ -28,6 +28,8 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "Abbasi-yadkori-et-al-Improved Algorithms for Linear Stochastic Bandits": https://papers.nips.cc/paper/2011/hash/e1d5be1c7f2f456670de3d53c7b54f4a-Abstract.html
 
+"Jamieson-Nowak-2014-Best-arm-identification-algorithms-for-multi-armed-bandits-in-the-fixed-confidence-setting":  http://ieeexplore.ieee.org/document/6814096/
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu
