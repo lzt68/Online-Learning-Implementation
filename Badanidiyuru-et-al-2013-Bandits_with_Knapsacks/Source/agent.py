@@ -35,7 +35,7 @@ class PrimalDualBwK(object):
 
         self.t = 1
         self.action_ = list()
-        self.total_reward_ = np.zeros(d)
+        self.total_reward_ = np.zeros(m)
         self.total_consumption_ = np.zeros((d, m))  # each column corresponds to an arm
         self.pulling_times_ = np.zeros(m)
         self.mean_reward_ = np.zeros(m)
@@ -54,12 +54,12 @@ class PrimalDualBwK(object):
         arm = self.action_[-1]
         arm_index = arm - 1
         self.total_reward_[arm_index] += reward
-        self.total_consumption_[arm_index] += consumption
+        self.total_consumption_[:, arm_index] += consumption
         self.pulling_times_[arm_index] += 1
         self.mean_reward_[arm_index] = self.total_reward_[arm_index] / self.pulling_times_[arm_index]
-        self.mean_consumption_[arm_index] = self.total_consumption_[arm_index] / self.pulling_times_[arm_index]
+        self.mean_consumption_[:, arm_index] = self.total_consumption_[:, arm_index] / self.pulling_times_[arm_index]
 
-        if self.t <= self.m:
+        if self.t <= self.m - 1:
             # In the initialization phase, we pull each arm once
             self.t += 1
             return
@@ -69,8 +69,8 @@ class PrimalDualBwK(object):
 
         # calculate the ucb and lcb
         ucb = self.mean_reward_ + self.rad(self.mean_reward_, self.pulling_times_)
-        ucb = np.minimum(ucb, np.ones(self.d))
-        ucb = np.maximum(ucb, np.zeros(self.d))
+        ucb = np.minimum(ucb, np.ones(self.m))
+        ucb = np.maximum(ucb, np.zeros(self.m))
         lcb = self.mean_consumption_ + self.rad(self.mean_consumption_, np.tile(self.pulling_times_, (self.d, 1)))
         lcb = np.minimum(lcb, np.ones((self.d, self.m)))
         lcb = np.maximum(lcb, np.zeros((self.d, self.m)))
@@ -88,3 +88,49 @@ class PrimalDualBwK(object):
     def rad(self, v, N):
         radius = np.sqrt(self.Crad * v / N) + self.Crad / N
         return radius
+
+
+#%% unit test 1, debug PrimalDualBwK and Env
+from env import Env_FixedConsumption, Env_Uncorrelated_Reward, Env_Correlated_Uniform
+
+random_seed = 12345
+np.random.seed(random_seed)
+
+d = 3
+m = 5
+B = 10
+r_list = np.random.uniform(low=0.0, high=1.0, size=m)
+d_list = np.random.uniform(low=0.0, high=1.0, size=(d, m))
+
+print("Env_FixedConsumption")
+env = Env_FixedConsumption(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
+agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
+reward_ = list()
+while not env.if_stop():
+    arm = agent.action()
+    consumption, reward = env.response(arm=arm)
+    agent.observe(reward=reward, consumption=consumption)
+    reward_.append(reward)
+print(f"Total reward is {np.sum(reward_)}")
+
+print("Env_Uncorrelated_Reward")
+env = Env_Uncorrelated_Reward(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
+agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
+reward_ = list()
+while not env.if_stop():
+    arm = agent.action()
+    consumption, reward = env.response(arm=arm)
+    agent.observe(reward=reward, consumption=consumption)
+    reward_.append(reward)
+print(f"Total reward is {np.sum(reward_)}")
+
+print("Env_Correlated_Uniform")
+env = Env_Correlated_Uniform(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
+agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
+reward_ = list()
+while not env.if_stop():
+    arm = agent.action()
+    consumption, reward = env.response(arm=arm)
+    agent.observe(reward=reward, consumption=consumption)
+    reward_.append(reward)
+print(f"Total reward is {np.sum(reward_)}")
