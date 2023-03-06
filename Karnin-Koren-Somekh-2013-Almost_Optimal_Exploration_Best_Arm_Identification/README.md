@@ -1,5 +1,7 @@
 # README
 
+This folder aims to reproduce the result of "One group of suboptimal" setting in Karnin2013 Figure 1.
+
 ## File Structure
 
 "Source": 
