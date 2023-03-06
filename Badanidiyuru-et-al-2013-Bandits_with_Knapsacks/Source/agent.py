@@ -71,7 +71,7 @@ class PrimalDualBwK(object):
         ucb = self.mean_reward_ + self.rad(self.mean_reward_, self.pulling_times_)
         ucb = np.minimum(ucb, np.ones(self.m))
         ucb = np.maximum(ucb, np.zeros(self.m))
-        lcb = self.mean_consumption_ + self.rad(self.mean_consumption_, np.tile(self.pulling_times_, (self.d, 1)))
+        lcb = self.mean_consumption_ - self.rad(self.mean_consumption_, np.tile(self.pulling_times_, (self.d, 1)))
         lcb = np.minimum(lcb, np.ones((self.d, self.m)))
         lcb = np.maximum(lcb, np.zeros((self.d, self.m)))
         EstCost = self.v @ lcb
@@ -91,46 +91,119 @@ class PrimalDualBwK(object):
 
 
 #%% unit test 1, debug PrimalDualBwK and Env
-from env import Env_FixedConsumption, Env_Uncorrelated_Reward, Env_Correlated_Uniform
+# from env import Env_FixedConsumption, Env_Uncorrelated_Reward, Env_Correlated_Uniform
 
-random_seed = 12345
-np.random.seed(random_seed)
+# random_seed = 12345
+# np.random.seed(random_seed)
 
-d = 3
-m = 5
-B = 10
-r_list = np.random.uniform(low=0.0, high=1.0, size=m)
-d_list = np.random.uniform(low=0.0, high=1.0, size=(d, m))
+# d = 3
+# m = 5
+# B = 10
+# r_list = np.random.uniform(low=0.0, high=1.0, size=m)
+# d_list = np.random.uniform(low=0.0, high=1.0, size=(d, m))
 
-print("Env_FixedConsumption")
-env = Env_FixedConsumption(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
-agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
-reward_ = list()
-while not env.if_stop():
-    arm = agent.action()
-    consumption, reward = env.response(arm=arm)
-    agent.observe(reward=reward, consumption=consumption)
-    reward_.append(reward)
-print(f"Total reward is {np.sum(reward_)}")
+# print("Env_FixedConsumption")
+# env = Env_FixedConsumption(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
+# agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
+# reward_ = list()
+# while not env.if_stop():
+#     arm = agent.action()
+#     consumption, reward = env.response(arm=arm)
+#     agent.observe(reward=reward, consumption=consumption)
+#     reward_.append(reward)
+# print(f"Total reward is {np.sum(reward_)}")
 
-print("Env_Uncorrelated_Reward")
-env = Env_Uncorrelated_Reward(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
-agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
-reward_ = list()
-while not env.if_stop():
-    arm = agent.action()
-    consumption, reward = env.response(arm=arm)
-    agent.observe(reward=reward, consumption=consumption)
-    reward_.append(reward)
-print(f"Total reward is {np.sum(reward_)}")
+# print("Env_Uncorrelated_Reward")
+# env = Env_Uncorrelated_Reward(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
+# agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
+# reward_ = list()
+# while not env.if_stop():
+#     arm = agent.action()
+#     consumption, reward = env.response(arm=arm)
+#     agent.observe(reward=reward, consumption=consumption)
+#     reward_.append(reward)
+# print(f"Total reward is {np.sum(reward_)}")
 
-print("Env_Correlated_Uniform")
-env = Env_Correlated_Uniform(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
-agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
-reward_ = list()
-while not env.if_stop():
-    arm = agent.action()
-    consumption, reward = env.response(arm=arm)
-    agent.observe(reward=reward, consumption=consumption)
-    reward_.append(reward)
-print(f"Total reward is {np.sum(reward_)}")
+# print("Env_Correlated_Uniform")
+# env = Env_Correlated_Uniform(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
+# agent = PrimalDualBwK(d=d, m=m, B=B, Crad=1.0)
+# reward_ = list()
+# while not env.if_stop():
+#     arm = agent.action()
+#     consumption, reward = env.response(arm=arm)
+#     agent.observe(reward=reward, consumption=consumption)
+#     reward_.append(reward)
+# print(f"Total reward is {np.sum(reward_)}")
+
+#%% unit test 2, compare the cumulative reward of PrimalDualBwk and the OPT_{LP}
+# from env import Env_FixedConsumption
+# from scipy.optimize import linprog
+# import matplotlib.pyplot as plt
+# from tqdm import tqdm
+
+# random_seed = 12345
+# np.random.seed(random_seed)
+
+# d = 3
+# m = 5
+# B = 1000
+# r_list = np.random.uniform(low=0.0, high=1.0, size=m)
+# d_list = np.random.uniform(low=0.0, high=1.0, size=(d + 1, m))
+# # d_list = np.eye(d)
+# # res = linprog(c=-r_list, A_ub=d_list, b_ub=1 * np.ones(d))
+# d_list[-1, :] = np.ones(m)
+# d += 1
+
+# # calculate the OPT_LP
+# res = linprog(c=-r_list, A_ub=d_list, b_ub=1 * np.ones(d))
+# reward_OPT_LP = np.cumsum(np.ones(B) * (-res.fun))
+
+# reward_ = list()
+# for T in tqdm(range(1, B + 1)):
+#     env = Env_FixedConsumption(r_list=r_list, d_list=d_list, m=m, B=T, d=d, random_seed=random_seed)
+#     agent = PrimalDualBwK(d=d, m=m, B=T, Crad=np.log(d * T * m))
+#     reward_T = list()
+#     while not env.if_stop():
+#         arm = agent.action()
+#         consumption, reward = env.response(arm=arm)
+#         agent.observe(reward=reward, consumption=consumption)
+#         reward_T.append(reward)
+#     reward_.append(np.sum(reward_T))
+# reward_ = np.array(reward_)
+
+# plt.plot(np.arange(1, B + 1), reward_OPT_LP[:B] - reward_[:B], label="regret")
+# plt.show()
+
+#%% unit test 3, find out why the agent always pull the same arm
+# from env import Env_FixedConsumption
+# from scipy.optimize import linprog
+# import matplotlib.pyplot as plt
+# from tqdm import tqdm
+# import numpy as np
+
+# random_seed = 12345
+# np.random.seed(random_seed)
+
+# d = 10
+# m = 10
+# B = 5000
+# r_list = np.random.uniform(low=0.0, high=1.0, size=m)
+# d_list = np.random.uniform(low=0.0, high=1.0, size=(d + 1, m))
+# # d_list = np.eye(d)
+# # res = linprog(c=-r_list, A_ub=d_list, b_ub=1 * np.ones(d))
+# d_list[-1, :] = np.ones(m)
+# d += 1
+
+# # calculate the OPT_LP
+# res = linprog(c=-r_list, A_ub=d_list, b_ub=1 * np.ones(d))
+# reward_OPT_LP = np.cumsum(np.ones(B) * (-res.fun))
+
+# env = Env_FixedConsumption(r_list=r_list, d_list=d_list, m=m, B=B, d=d, random_seed=random_seed)
+# agent = PrimalDualBwK(d=d, m=m, B=B, Crad=np.log(d * B * m))
+# reward_T = list()
+# while not env.if_stop():
+#     arm = agent.action()
+#     consumption, reward = env.response(arm=arm)
+#     agent.observe(reward=reward, consumption=consumption)
+#     reward_T.append(reward)
+# print(f"total reward is {np.sum(reward_T)}")
