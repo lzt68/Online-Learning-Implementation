@@ -11,4 +11,4 @@ Experiment.ipynb: use a synthesis example to check the growing trend of Regret.
 "Source":
 
 + agent.py: the source code of algorithm PrimalDualBwK
-+ env.py
++ env.py: the source code of the environment
