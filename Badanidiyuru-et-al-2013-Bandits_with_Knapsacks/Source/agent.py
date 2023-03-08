@@ -2,17 +2,6 @@ from typing import Union
 import numpy as np
 
 
-class BalancedExploration(object):
-    def __init__(self) -> None:
-        pass
-
-    def action(self):
-        pass
-
-    def observe(self):
-        pass
-
-
 class PrimalDualBwK(object):
     def __init__(self, d: int, m: int, B: Union[np.float64, int, float], Crad: Union[np.float64, float]) -> None:
         """Implement the Primal Dual algorithm
@@ -81,7 +70,6 @@ class PrimalDualBwK(object):
 
         # update the v
         self.v = self.v * (1 + self.epsilon) ** lcb[:, x - 1]
-        self.v = self.v / np.sum(np.abs(self.v))  # to avoid too big value of v, we devide v by its one norm
 
         self.t += 1
 
