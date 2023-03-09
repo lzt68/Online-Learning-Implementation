@@ -30,6 +30,8 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "Jamieson-Nowak-2014-Best-arm-identification-algorithms-for-multi-armed-bandits-in-the-fixed-confidence-setting":  http://ieeexplore.ieee.org/document/6814096/
 
+"Badanidiyuru-et-al-2013-Bandits_with_Knapsacks":  http://arxiv.org/abs/1305.2545
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu
