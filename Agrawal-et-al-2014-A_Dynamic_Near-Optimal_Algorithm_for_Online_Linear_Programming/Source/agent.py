@@ -153,7 +153,6 @@ class DynamicLearning(object):
 #     env.observe(action)
 # print("algorithm reward is", np.sum(agent.reward_))
 
-
 #%% unit test 2, test the performance of dynamic learning
 # from env import Env
 
