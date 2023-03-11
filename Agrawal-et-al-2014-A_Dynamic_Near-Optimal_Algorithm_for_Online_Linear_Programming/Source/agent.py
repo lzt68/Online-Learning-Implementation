@@ -149,7 +149,8 @@ class DynamicLearning(object):
 # agent = OneTimeLearning(m=m, n=n, epsilon=epsilon, b=b)
 # while not env.if_stop():
 #     pi_t, a_t = env.deal()
-#     agent.action(pi_t=pi_t, a_t=a_t)
+#     action = agent.action(pi_t=pi_t, a_t=a_t)
+#     env.observe(action)
 # print("algorithm reward is", np.sum(agent.reward_))
 
 
@@ -157,11 +158,10 @@ class DynamicLearning(object):
 # from env import Env
 
 # m = 4
-# n = 200
+# n = 100
 # epsilon = 0.1
 # random_seed = 0
-# # B = 6 * m * np.log(n / epsilon) / epsilon**3
-# B = 40
+# B = 10
 # print(f"B is {B}")
 # b = B * np.ones(m)
 
@@ -173,8 +173,17 @@ class DynamicLearning(object):
 # print(f"offline optimal is {-opt_res.fun}")
 
 # env = Env(m=m, n=n, b=b, pi=pi, a=a, random_seed=random_seed)
+# agent = OneTimeLearning(m=m, n=n, epsilon=epsilon, b=b)
+# while not env.if_stop():
+#     pi_t, a_t = env.deal()
+#     action = agent.action(pi_t=pi_t, a_t=a_t)
+#     env.observe(action)
+# print("one time learning, algorithm reward is", np.sum(agent.reward_))
+
+# env = Env(m=m, n=n, b=b, pi=pi, a=a, random_seed=random_seed)
 # agent = DynamicLearning(m=m, n=n, epsilon=epsilon, b=b)
 # while not env.if_stop():
 #     pi_t, a_t = env.deal()
-#     agent.action(pi_t=pi_t, a_t=a_t)
-# print("algorithm reward is", np.sum(agent.reward_))
+#     action = agent.action(pi_t=pi_t, a_t=a_t)
+#     env.observe(action)
+# print("Dynamic learning, algorithm reward is", np.sum(agent.reward_))

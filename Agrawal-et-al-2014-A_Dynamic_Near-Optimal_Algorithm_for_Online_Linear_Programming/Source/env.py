@@ -11,6 +11,8 @@ class Env(object):
         self.b = b
         self.random_seed = random_seed
         self.random_generator = Generator(PCG64(random_seed))
+        self.total_consumption_ = np.zeros(m)
+        self.stop = False
 
         if pi is None:
             self.pi = self.random_generator.uniform(low=0.0, high=1.0, size=(n))
@@ -33,13 +35,21 @@ class Env(object):
         self.pi = self.pi[index]
 
     def deal(self):
-        if self.t <= self.n:
+        if self.t <= self.n and (not self.stop):
             pi_t = self.pi[self.t - 1]
             a_t = self.a[:, self.t - 1]
-            self.t += 1
             return pi_t, a_t
         else:
             return None
 
+    def observe(self, action):
+        consumption = action * self.a[:, self.t - 1]
+        self.total_consumption_ += consumption
+        if np.any(self.total_consumption_ > self.b):
+            self.stop = True
+        self.t += 1
+        if self.t > self.n:
+            self.stop = True
+
     def if_stop(self):
-        return self.t > self.n
+        return self.stop
