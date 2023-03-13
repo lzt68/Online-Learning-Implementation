@@ -32,6 +32,8 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "Badanidiyuru-et-al-2013-Bandits_with_Knapsacks":  http://arxiv.org/abs/1305.2545
 
+"Agrawal-et-al-2014-A_Dynamic_Near-Optimal_Algorithm_for_Online_Linear_Programming": https://pubsonline.informs.org/doi/abs/10.1287/opre.2014.1289
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu
