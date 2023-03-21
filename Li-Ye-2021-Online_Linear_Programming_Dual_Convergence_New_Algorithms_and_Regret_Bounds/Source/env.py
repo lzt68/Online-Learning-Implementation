@@ -23,12 +23,18 @@ class RandomInputI(object):
         self.total_consumption_ = np.zeros(m)
         self.stop = False
 
+        self.a = np.zeros((m, n))
+        self.r = np.zeros(n)
+
         self.t = 1
 
     def deal(self):
         if self.t <= self.n and (not self.stop):
             r_j = self.random_generator.uniform(low=0.0, high=10.0)
             a_j = self.random_generator.uniform(low=-0.5, high=1.0, size=self.m)
+
+            self.a[:, self.t - 1] = a_j
+            self.r[self.t - 1] = r_j
             return r_j, a_j
         else:
             return None
@@ -36,8 +42,6 @@ class RandomInputI(object):
     def observe(self, action):
         consumption = action * self.a[:, self.t - 1]
         self.total_consumption_ += consumption
-        # if np.any(self.total_consumption_ > self.b):
-        #     self.stop = True
         self.t += 1
         if self.t > self.n:
             self.stop = True
