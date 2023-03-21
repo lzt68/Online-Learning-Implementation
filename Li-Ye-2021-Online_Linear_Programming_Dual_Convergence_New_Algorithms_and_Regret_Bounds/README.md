@@ -34,28 +34,39 @@ p^*=\arg\min_{p\ge 0} \ pmd +\mathbb{E}_{(r,\bold{a})\sim \mathcal{P}}\left[(r-p
 $$
 where $p\in \mathbb{R}$
 
-In general, consider function $dp  +\mathbb{E}\max \{r-ap, 0\}$, and denote $f$ as the pdf of $a$, $r\sim U(0, 10)$, we have $A=\int_{-\infty}^{\frac{r}{p}} f(a) da, B=\int_{-\infty}^{\frac{r}{p}} af(a) da$
+In general, consider function $dp  +\mathbb{E}\max \{r-ap, 0\}$, and denote $f$ as the pdf of $a$, $g$ as the pdf of $r$  
+Define $A=\int_{-\infty}^{\frac{r}{p}} f(a) da, B=\int_{-\infty}^{\frac{r}{p}} af(a) da$
 $$
 \begin{align*}
 &dp+\mathbb{E}\max \{r-ap, 0\}\\
-=&dp+\frac{1}{10}\int_0^{10}\int_{-\infty}^{+\infty}  \max \{r-ap, 0\} f(a) da dr\\
-=&dp+\frac{1}{10}\int_0^{10}\int_{-\infty}^{\frac{r}{p}} (r-ap)f(a) da dr\\
-=&dp+\frac{1}{10}\int_0^{10}rA - pB dr\\
-=&\frac{1}{10}\int_0^{10}rA +(d-B) p dr\\
+=&dp+\int_{-\infty}^{+\infty}\int_{-\infty}^{+\infty}  \max \{r-ap, 0\} f(a)g(r) da dr\\
+=&dp+\int_{-\infty}^{+\infty}\int_{-\infty}^{\frac{r}{p}} (r-ap)f(a) g(r)da dr\\
+=&dp+\int_{-\infty}^{+\infty}(rA - pB)g(r) dr\\
+=&\int_{-\infty}^{+\infty}(rA +(d-B) p)g(r) dr
 \end{align*}
 $$
 Thus
 $$
 \begin{align*}
 &\frac{\partial \left(dp+\mathbb{E}\max \{r-ap, 0\}\right)}{\partial p }\\
-=&\frac{1}{10}\int_0^{10}r \frac{\partial A}{\partial p} + \frac{\partial (d-B) p}{\partial p} dr\\
-=&\frac{1}{10}\int_0^{10}r f(\frac{r}{p})(-\frac{r}{p^2}) + \frac{\partial (d-B)}{\partial p}p+(d-B) dr\\
-=&\frac{1}{10}\int_0^{10}r f(\frac{r}{p})(-\frac{r}{p^2}) + \frac{\partial (-B)}{\partial p}p+(d-B) dr\\
-=&\frac{1}{10}\int_0^{10}r f(\frac{r}{p})(-\frac{r}{p^2}) - \frac{r}{p}f(\frac{r}{p})(-\frac{r}{p^2})p+(d-B) dr\\
-=&\frac{1}{10}\int_0^{10} d-B dr
+=&\int_{-\infty}^{+\infty}\left(r \frac{\partial A}{\partial p} + \frac{\partial (d-B) p}{\partial p}\right) g(r) dr\\
+=&\int_{-\infty}^{+\infty}\left(r f(\frac{r}{p})(-\frac{r}{p^2}) + \frac{\partial (d-B)}{\partial p}p+(d-B)\right) g(r) dr\\
+=&\int_{-\infty}^{+\infty}\left(r f(\frac{r}{p})(-\frac{r}{p^2}) + \frac{\partial (-B)}{\partial p}p+(d-B)\right) g(r) dr\\
+=&\int_{-\infty}^{+\infty}\left(r f(\frac{r}{p})(-\frac{r}{p^2}) - \frac{r}{p}f(\frac{r}{p})(-\frac{r}{p^2})p+(d-B)\right) g(r) dr\\
+=&\int_{-\infty}^{+\infty} \left(d-B\right) g(r) dr
 \end{align*}
 $$
 which implies if $dm \ge \mathbb{E}\sum_{i=1}^m a_i$, the optimal solution $p^*= 0$. You can check the Random Input I in the section 5.1 fits in this case.
 
-In the section 5.1 in the paper, the author suggests using SAA scheme with $10^6$ samples. Due to the computation limit, I only 
+In the section 5.1 in the paper, the author suggests using SAA scheme with $10^6$ samples. Due to the computation limit, I used SGD to solve the optimal $p^*$
 
+## Notes on Simplified-Dynamic-Learning
+
+In the second step of Simplified-Dynamic-Learning, we need to find $\delta\in (1, 2]$ and $L\in \mathbb{Z}$, s.t. $\lfloor \delta^L \rfloor = n$
+
+Then we can take $L=\lceil\log_2 n\rceil$, $\delta=n^{\frac{1}{L}}$, since $n^{\frac{1}{L}}\le n^{\frac{1}{\log_2 n}}=2$
+
+
+$$
+p^*_k=\arg\min_p \sum_{i=1}^m d_ip_i+\frac{1}{t_k}\sum_{j=1}^{t_k}\left(r_j-\sum_{i=1}^m a_{ij} p_i\right)^+, s.t. p\ge0
+$$

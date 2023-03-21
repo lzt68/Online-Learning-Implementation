@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import linprog
+from numpy.random import Generator, PCG64
 from typing import Union
 
 
@@ -25,6 +26,7 @@ class NoNeedtoLearn(object):
         self.m = m
         self.n = n
         self.b = b
+        self.random_generator = Generator(PCG64(random_seed))
         self.input_name = input_name
 
         np.random.seed(random_seed)
@@ -37,7 +39,7 @@ class NoNeedtoLearn(object):
 
             step_size = 1.0
 
-            a = np.random.uniform(low=-0.5, high=1.0, size=(m, n_sample))
+            a = self.random_generator.uniform(low=0.5, high=1.0, size=(m, n_sample))
             r = np.sum(a, axis=0)
             d = 0.2
 
@@ -45,7 +47,7 @@ class NoNeedtoLearn(object):
             pnext = 1.0
             for _ in range(epoch_num):
                 index = np.arange(n_sample)
-                np.random.shuffle(index)
+                self.random_generator.shuffle(index)
                 a = a[:, index]
                 r = r[index]
                 for round_index in range(n_sample // sample_size):
@@ -85,6 +87,65 @@ class NoNeedtoLearn(object):
         return action
 
 
+class SimplifiedDynamicLearning(object):
+    def __init__(self, m: int, n: int, b: np.array) -> None:
+        """The price vector $p_t$ is updated only at geometric time intervals and are independent of actions
+
+        Args:
+            m (int): Number of resources.
+            n (int): Number of rounds.
+            b (np.array): The initial available resource.
+        """
+        assert b.shape[0] == m and len(b.shape) == 1, "Number of resources doesn't match"
+        self.m = m
+        self.n = n
+        self.b = b
+        self.d = b / n
+
+        self.L = int(np.ceil(np.log2(n)))  # check README.md to see why we take this value
+        self.delta = n ** (1 / self.L)
+
+        self.pi = np.zeros(n)
+        self.a = np.zeros((m, n))
+        self.p = np.zeros(m)
+        self.action_ = np.zeros(n)
+        self.reward_ = np.zeros(n)
+
+        self.t = 1
+        self.k = 0
+
+    def action(self, r_t, a_t):
+        self.pi[self.t - 1] = r_t
+        self.a[:, self.t - 1] = a_t
+
+        if self.t == int(np.floor(self.delta**self.k)):
+            self.updatep()
+            self.k += 1
+
+        action = (r_t > self.p @ a_t).astype(float)
+        self.action_[self.t - 1] = action
+        self.reward_[self.t - 1] = action * r_t
+
+        self.t += 1
+        return action
+
+    def updatep(self):
+        # solve the dual problem
+        # $$
+        # p^*_k=\arg\min_p \sum_{i=1}^m d_ip_i+\frac{1}{t_k}\sum_{j=1}^{t_k}\left(r_j-\sum_{i=1}^m a_{ij} p_i\right)^+, s.t. p\ge0
+        # $$
+        c = np.ones(self.m + self.t) / self.t
+        c[: self.m] = self.d.copy()
+
+        Aub = np.zeros((self.t, self.m + self.t))
+        Aub[:, : self.m] = -self.a[:, : self.t].T
+        Aub[:, self.m : self.m + self.t] = -np.eye(self.t)
+        bub = -self.pi[: self.t]
+
+        res = linprog(c=c, A_ub=Aub, b_ub=bub)
+        self.p = res.x[: self.m]
+
+
 #%% unit test 1, debug no-need-to-learn
 # m = 4
 # n = 25
@@ -99,17 +160,34 @@ class NoNeedtoLearn(object):
 # n = 25
 # d = 0.25
 # b = d * np.ones(m) * n
-# epsilon = 0.1
 # random_seed = 0
 
 # # bench mark from offline linear programming
 # env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
-# agent = NoNeedtoLearn(m=m, n=n, b=b)
+# agent = NoNeedtoLearn(m=m, n=n, b=b, input_name="RandomInputI")
 # while not env.if_stop():
 #     r_t, a_t = env.deal()
 #     action = agent.action(r_t=r_t, a_t=a_t)
 #     env.observe(action)
-# print("algorithm reward is", np.sum(agent.reward_))
+# print("OneTimeLearning algorithm reward is", np.sum(agent.reward_))
+
+#%% unit test 3, debug SimplifiedDynamicLearning
+# from env import RandomInputI
+
+# m = 4
+# n = 25
+# d = 0.25
+# b = d * np.ones(m) * n
+# random_seed = 0
+
+# # bench mark from offline linear programming
+# env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
+# agent = SimplifiedDynamicLearning(m=m, n=n, b=b)
+# while not env.if_stop():
+#     r_t, a_t = env.deal()
+#     action = agent.action(r_t=r_t, a_t=a_t)
+#     env.observe(action)
+# print("SimplifiedDynamicLearning algorithm reward is", np.sum(agent.reward_))
 
 #%% unit test 2, test the performance of dynamic learning
 # from env import Env
