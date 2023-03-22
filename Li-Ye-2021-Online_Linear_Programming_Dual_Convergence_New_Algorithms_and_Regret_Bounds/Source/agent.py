@@ -26,6 +26,7 @@ class NoNeedtoLearn(object):
         self.m = m
         self.n = n
         self.b = b
+        self.remain_b = self.b.copy()
         self.random_generator = Generator(PCG64(random_seed))
         self.input_name = input_name
 
@@ -79,9 +80,15 @@ class NoNeedtoLearn(object):
         self.pi[self.t - 1] = r_t
         self.a[:, self.t - 1] = a_t
 
-        action = (r_t > self.p @ a_t).astype(float)
-        self.action_[self.t - 1] = action
-        self.reward_[self.t - 1] = action * r_t
+        if np.all(a_t <= self.remain_b):
+            action = (r_t > self.p @ a_t).astype(float)
+            self.action_[self.t - 1] = action
+            self.reward_[self.t - 1] = action * r_t
+        else:
+            action = 0
+            self.action_[self.t - 1] = action
+            self.reward_[self.t - 1] = action * r_t
+        self.remain_b = self.remain_b - a_t * action
 
         self.t += 1
         return action
@@ -100,6 +107,7 @@ class SimplifiedDynamicLearning(object):
         self.m = m
         self.n = n
         self.b = b
+        self.remain_b = self.b.copy()
         self.d = b / n
 
         self.L = int(np.ceil(np.log2(n)))  # check README.md to see why we take this value
@@ -122,9 +130,15 @@ class SimplifiedDynamicLearning(object):
             self.updatep()
             self.k += 1
 
-        action = (r_t > self.p @ a_t).astype(float)
-        self.action_[self.t - 1] = action
-        self.reward_[self.t - 1] = action * r_t
+        if np.all(a_t <= self.remain_b):
+            action = (r_t > self.p @ a_t).astype(float)
+            self.action_[self.t - 1] = action
+            self.reward_[self.t - 1] = action * r_t
+        else:
+            action = 0
+            self.action_[self.t - 1] = action
+            self.reward_[self.t - 1] = action * r_t
+        self.remain_b = self.remain_b - a_t * action
 
         self.t += 1
         return action
@@ -136,6 +150,70 @@ class SimplifiedDynamicLearning(object):
         # $$
         c = np.ones(self.m + self.t) / self.t
         c[: self.m] = self.d.copy()
+
+        Aub = np.zeros((self.t, self.m + self.t))
+        Aub[:, : self.m] = -self.a[:, : self.t].T
+        Aub[:, self.m : self.m + self.t] = -np.eye(self.t)
+        bub = -self.pi[: self.t]
+
+        res = linprog(c=c, A_ub=Aub, b_ub=bub)
+        self.p = res.x[: self.m]
+
+
+class ActionHistoryDependentLearning(object):
+    def __init__(self, m: int, n: int, b: np.array) -> None:
+        """The price vector $p_t$ is dependent on remaining resources
+
+        Args:
+            m (int): Number of resources.
+            n (int): Number of rounds.
+            b (np.array): The initial available resource.
+        """
+        assert b.shape[0] == m and len(b.shape) == 1, "Number of resources doesn't match"
+        self.m = m
+        self.n = n
+        self.b = b
+        self.remain_b = self.b.copy()
+        self.d = b / n
+
+        self.pi = np.zeros(n)
+        self.a = np.zeros((m, n))
+        self.p = np.zeros(m)
+        self.action_ = np.zeros(n)
+        self.reward_ = np.zeros(n)
+
+        self.t = 1
+        self.k = 0
+
+    def action(self, r_t, a_t):
+        self.pi[self.t - 1] = r_t
+        self.a[:, self.t - 1] = a_t
+
+        if np.all(a_t <= self.remain_b):
+            action = (r_t > self.p @ a_t).astype(float)
+            self.action_[self.t - 1] = action
+            self.reward_[self.t - 1] = action * r_t
+        else:
+            action = 0
+            self.action_[self.t - 1] = action
+            self.reward_[self.t - 1] = action * r_t
+        self.remain_b = self.remain_b - a_t * action
+
+        # update p
+        self.updatep()
+        self.t += 1
+        return action
+
+    def updatep(self):
+        # solve the dual problem
+        # $$
+        # p^*_k=\arg\min_p \sum_{i=1}^m d_ip_i+\frac{1}{t_k}\sum_{j=1}^{t_k}\left(r_j-\sum_{i=1}^m a_{ij} p_i\right)^+, s.t. p\ge0
+        # $$
+        if self.t == self.n:
+            return
+
+        c = np.ones(self.m + self.t) / self.t
+        c[: self.m] = self.remain_b / (self.n - self.t)
 
         Aub = np.zeros((self.t, self.m + self.t))
         Aub[:, : self.m] = -self.a[:, : self.t].T
@@ -188,6 +266,25 @@ class SimplifiedDynamicLearning(object):
 #     action = agent.action(r_t=r_t, a_t=a_t)
 #     env.observe(action)
 # print("SimplifiedDynamicLearning algorithm reward is", np.sum(agent.reward_))
+
+#%% unit test 4, debug ActionHistoryDependentLearning
+# from env import RandomInputI
+
+# m = 4
+# n = 25
+# d = 0.25
+# b = d * np.ones(m) * n
+# random_seed = 0
+
+# # bench mark from offline linear programming
+# env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
+# agent = ActionHistoryDependentLearning(m=m, n=n, b=b)
+# while not env.if_stop():
+#     r_t, a_t = env.deal()
+#     action = agent.action(r_t=r_t, a_t=a_t)
+#     env.observe(action)
+# print("ActionHistoryDependentLearning algorithm reward is", np.sum(agent.reward_))
+
 
 #%% unit test 2, test the performance of dynamic learning
 # from env import Env
