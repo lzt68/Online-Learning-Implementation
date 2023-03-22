@@ -67,7 +67,7 @@ class NoNeedtoLearn(object):
             self.p = p0 * np.ones(m)
         else:
             assert False, "Cannot find the distribution of (r, a)"
-        print("Successfully get p")
+        # print("NoNeedtoLearn Successfully get p")
 
         self.pi = np.zeros(n)
         self.a = np.zeros((m, n))
@@ -120,7 +120,7 @@ class SimplifiedDynamicLearning(object):
         self.reward_ = np.zeros(n)
 
         self.t = 1
-        self.k = 0
+        self.k = 1
 
     def action(self, r_t, a_t):
         self.pi[self.t - 1] = r_t
@@ -235,30 +235,29 @@ class ActionHistoryDependentLearning(object):
 # from env import RandomInputI
 
 # m = 4
-# n = 25
+# n = 100
 # d = 0.25
 # b = d * np.ones(m) * n
 # random_seed = 0
 
-# # bench mark from offline linear programming
 # env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
 # agent = NoNeedtoLearn(m=m, n=n, b=b, input_name="RandomInputI")
 # while not env.if_stop():
 #     r_t, a_t = env.deal()
 #     action = agent.action(r_t=r_t, a_t=a_t)
 #     env.observe(action)
+# print(agent.p)
 # print("OneTimeLearning algorithm reward is", np.sum(agent.reward_))
 
 #%% unit test 3, debug SimplifiedDynamicLearning
 # from env import RandomInputI
 
 # m = 4
-# n = 25
+# n = 100
 # d = 0.25
 # b = d * np.ones(m) * n
 # random_seed = 0
 
-# # bench mark from offline linear programming
 # env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
 # agent = SimplifiedDynamicLearning(m=m, n=n, b=b)
 # while not env.if_stop():
@@ -269,9 +268,10 @@ class ActionHistoryDependentLearning(object):
 
 #%% unit test 4, debug ActionHistoryDependentLearning
 # from env import RandomInputI
+# from time import time
 
 # m = 4
-# n = 25
+# n = 500
 # d = 0.25
 # b = d * np.ones(m) * n
 # random_seed = 0
@@ -279,43 +279,12 @@ class ActionHistoryDependentLearning(object):
 # # bench mark from offline linear programming
 # env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
 # agent = ActionHistoryDependentLearning(m=m, n=n, b=b)
+# t1 = time()
 # while not env.if_stop():
 #     r_t, a_t = env.deal()
 #     action = agent.action(r_t=r_t, a_t=a_t)
 #     env.observe(action)
-# print("ActionHistoryDependentLearning algorithm reward is", np.sum(agent.reward_))
+# t2 = time()
+# print(f"ActionHistoryDependentLearning algorithm reward is {np.sum(agent.reward_)}, time consumption is {t2-t1}")
 
-
-#%% unit test 2, test the performance of dynamic learning
-# from env import Env
-
-# m = 4
-# n = 100
-# epsilon = 0.1
-# random_seed = 0
-# B = 10
-# print(f"B is {B}")
-# b = B * np.ones(m)
-
-# np.random.seed(random_seed)
-# pi = np.random.uniform(low=0.0, high=1.0, size=(n))
-# a = np.random.uniform(low=0.0, high=1.0, size=(m, n))
-
-# opt_res = linprog(c=-pi, A_ub=a, b_ub=b, bounds=[(0.0, 1.0)] * n)
-# print(f"offline optimal is {-opt_res.fun}")
-
-# env = Env(m=m, n=n, b=b, pi=pi, a=a, random_seed=random_seed)
-# agent = OneTimeLearning(m=m, n=n, epsilon=epsilon, b=b)
-# while not env.if_stop():
-#     pi_t, a_t = env.deal()
-#     action = agent.action(pi_t=pi_t, a_t=a_t)
-#     env.observe(action)
-# print("one time learning, algorithm reward is", np.sum(agent.reward_))
-
-# env = Env(m=m, n=n, b=b, pi=pi, a=a, random_seed=random_seed)
-# agent = DynamicLearning(m=m, n=n, epsilon=epsilon, b=b)
-# while not env.if_stop():
-#     pi_t, a_t = env.deal()
-#     action = agent.action(pi_t=pi_t, a_t=a_t)
-#     env.observe(action)
-# print("Dynamic learning, algorithm reward is", np.sum(agent.reward_))
+# %%

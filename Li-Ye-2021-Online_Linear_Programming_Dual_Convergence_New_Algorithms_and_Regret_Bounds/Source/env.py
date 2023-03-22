@@ -70,12 +70,18 @@ class RandomInputII(object):
         self.total_consumption_ = np.zeros(m)
         self.stop = False
 
+        self.a = np.zeros((m, n))
+        self.r = np.zeros(n)
+
         self.t = 1
 
     def deal(self):
         if self.t <= self.n and (not self.stop):
             a_j = self.random_generator.normal(loc=0.5, scale=1.0, size=self.m)
             r_j = np.sum(a_j)
+
+            self.a[:, self.t - 1] = a_j
+            self.r[self.t - 1] = r_j
             return r_j, a_j
         else:
             return None
