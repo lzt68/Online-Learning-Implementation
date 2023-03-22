@@ -1,8 +1,22 @@
 # README
 
-This folder aims to reproduce part of the numeric experiments in Li & Ye 2021 *Online Linear Programming: Dual Convergence, New Algorithms, and Regret Bounds*
+This folder aims to reproduce Figure 2 Li & Ye 2021 *Online Linear Programming: Dual Convergence, New Algorithms, and Regret Bounds*. But there are some problems and I failed to reproduce their result. You can check following sections for some of my implementation details.
 
 ## File Structure
+
+Experiment.ipynb: The notebook that conducts experiments.
+
+"Source"
+
++ agent.py: The implementation of three algorithms
+  + No-Need-To-Learn
+  + Simplified-Dynamic
+  + History-Dependent-Learning
++ env.py: Implement RandomInputI and RandomInputII
+
+## Notes on the linear programming solver
+
+The scipy.optimize.linprog always leads to numeric error and warns me of convergence failure. Thus I further implement the version of SCIP https://www.scipopt.org/ with its python interface https://scipopt.github.io/PySCIPOpt/docs/html/index.html.
 
 ## Notes of No-Need-to-Learn
 
@@ -65,8 +79,3 @@ In the section 5.1 in the paper, the author suggests using SAA scheme with $10^6
 In the second step of Simplified-Dynamic-Learning, we need to find $\delta\in (1, 2]$ and $L\in \mathbb{Z}$, s.t. $\lfloor \delta^L \rfloor = n$
 
 Then we can take $L=\lceil\log_2 n\rceil$, $\delta=n^{\frac{1}{L}}$, since $n^{\frac{1}{L}}\le n^{\frac{1}{\log_2 n}}=2$
-
-
-$$
-p^*_k=\arg\min_p \sum_{i=1}^m d_ip_i+\frac{1}{t_k}\sum_{j=1}^{t_k}\left(r_j-\sum_{i=1}^m a_{ij} p_i\right)^+, s.t. p\ge0
-$$

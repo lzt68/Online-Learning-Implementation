@@ -95,18 +95,21 @@ class NoNeedtoLearn(object):
 
 
 class SimplifiedDynamicLearning(object):
-    def __init__(self, m: int, n: int, b: np.array) -> None:
+    def __init__(self, m: int, n: int, b: np.array, solver="linprog") -> None:
         """The price vector $p_t$ is updated only at geometric time intervals and are independent of actions
 
         Args:
             m (int): Number of resources.
             n (int): Number of rounds.
             b (np.array): The initial available resource.
+            solver (option, string): Specify the solver of linear programming. Defaults to "linprog" function in scipy.optimize
+                I also implement another version, using SCIP
         """
         assert b.shape[0] == m and len(b.shape) == 1, "Number of resources doesn't match"
         self.m = m
         self.n = n
         self.b = b
+        self.solver = solver
         self.remain_b = self.b.copy()
         self.d = b / n
 
@@ -148,20 +151,56 @@ class SimplifiedDynamicLearning(object):
         # $$
         # p^*_k=\arg\min_p \sum_{i=1}^m d_ip_i+\frac{1}{t_k}\sum_{j=1}^{t_k}\left(r_j-\sum_{i=1}^m a_{ij} p_i\right)^+, s.t. p\ge0
         # $$
-        c = np.ones(self.m + self.t) / self.t
-        c[: self.m] = self.d.copy()
+        if self.solver == "linprog":
+            c = np.ones(self.m + self.t) / self.t
+            c[: self.m] = self.d.copy()
 
-        Aub = np.zeros((self.t, self.m + self.t))
-        Aub[:, : self.m] = -self.a[:, : self.t].T
-        Aub[:, self.m : self.m + self.t] = -np.eye(self.t)
-        bub = -self.pi[: self.t]
+            Aub = np.zeros((self.t, self.m + self.t))
+            Aub[:, : self.m] = -self.a[:, : self.t].T
+            Aub[:, self.m : self.m + self.t] = -np.eye(self.t)
+            bub = -self.pi[: self.t]
 
-        res = linprog(c=c, A_ub=Aub, b_ub=bub)
-        self.p = res.x[: self.m]
+            res = linprog(c=c, A_ub=Aub, b_ub=bub, options={"cholesky": False, "sym_pos": False})
+            self.p = res.x[: self.m]
+        elif self.solver == "SCIP":
+            import pyscipopt
+            from pyscipopt import quicksum
+
+            model = pyscipopt.Model()
+            model.hideOutput()
+
+            # define variable
+            var = {}
+            for pindex in range(1, self.m + 1):
+                var[f"p{pindex}"] = model.addVar(vtype="C", lb=0.0, name=f"p{pindex}")
+            for yindex in range(1, self.t + 1):
+                var[f"y{yindex}"] = model.addVar(vtype="C", lb=0.0, name=f"y{yindex}")
+
+            # define object function
+            model.setObjective(
+                quicksum(var[f"p{pindex}"] * self.d[pindex - 1] for pindex in range(1, self.m + 1)) + quicksum(var[f"y{yindex}"] / self.t for yindex in range(1, self.t + 1)),
+                "minimize",
+            )
+
+            # add constraint
+            constraint = {}
+            for con_index in range(1, self.t + 1):
+                constraint[con_index] = model.addCons(
+                    var[f"y{con_index}"] + quicksum(var[f"p{pindex}"] * self.a[pindex - 1, con_index - 1] for pindex in range(1, self.m + 1)) >= self.pi[con_index - 1]
+                )
+
+            # optimize the model
+            model.optimize()
+
+            # update the p
+            for pindex in range(1, self.m + 1):
+                self.p[pindex - 1] = model.getVal(var[f"p{pindex}"])
+        else:
+            assert False, "Fail to find the solver"
 
 
 class ActionHistoryDependentLearning(object):
-    def __init__(self, m: int, n: int, b: np.array) -> None:
+    def __init__(self, m: int, n: int, b: np.array, solver="linprog") -> None:
         """The price vector $p_t$ is dependent on remaining resources
 
         Args:
@@ -173,6 +212,7 @@ class ActionHistoryDependentLearning(object):
         self.m = m
         self.n = n
         self.b = b
+        self.solver = solver
         self.remain_b = self.b.copy()
         self.d = b / n
 
@@ -212,16 +252,53 @@ class ActionHistoryDependentLearning(object):
         if self.t == self.n:
             return
 
-        c = np.ones(self.m + self.t) / self.t
-        c[: self.m] = self.remain_b / (self.n - self.t)
+        if self.solver == "linprog":
+            c = np.ones(self.m + self.t) / self.t
+            c[: self.m] = self.remain_b / (self.n - self.t)
 
-        Aub = np.zeros((self.t, self.m + self.t))
-        Aub[:, : self.m] = -self.a[:, : self.t].T
-        Aub[:, self.m : self.m + self.t] = -np.eye(self.t)
-        bub = -self.pi[: self.t]
+            Aub = np.zeros((self.t, self.m + self.t))
+            Aub[:, : self.m] = -self.a[:, : self.t].T
+            Aub[:, self.m : self.m + self.t] = -np.eye(self.t)
+            bub = -self.pi[: self.t]
 
-        res = linprog(c=c, A_ub=Aub, b_ub=bub)
-        self.p = res.x[: self.m]
+            res = linprog(c=c, A_ub=Aub, b_ub=bub)
+            self.p = res.x[: self.m]
+        elif self.solver == "SCIP":
+            import pyscipopt
+            from pyscipopt import quicksum
+
+            model = pyscipopt.Model()
+            model.hideOutput()
+
+            # define variable
+            var = {}
+            for pindex in range(1, self.m + 1):
+                var[f"p{pindex}"] = model.addVar(vtype="C", lb=0.0, name=f"p{pindex}")
+            for yindex in range(1, self.t + 1):
+                var[f"y{yindex}"] = model.addVar(vtype="C", lb=0.0, name=f"y{yindex}")
+
+            # define object function
+            model.setObjective(
+                quicksum(var[f"p{pindex}"] * self.remain_b[pindex - 1] / (self.n - self.t) for pindex in range(1, self.m + 1))
+                + quicksum(var[f"y{yindex}"] / self.t for yindex in range(1, self.t + 1)),
+                "minimize",
+            )
+
+            # add constraint
+            constraint = {}
+            for con_index in range(1, self.t + 1):
+                constraint[con_index] = model.addCons(
+                    var[f"y{con_index}"] + quicksum(var[f"p{pindex}"] * self.a[pindex - 1, con_index - 1] for pindex in range(1, self.m + 1)) >= self.pi[con_index - 1]
+                )
+
+            # optimize the model
+            model.optimize()
+
+            # update the p
+            for pindex in range(1, self.m + 1):
+                self.p[pindex - 1] = model.getVal(var[f"p{pindex}"])
+        else:
+            assert False, "Fail to find solver"
 
 
 #%% unit test 1, debug no-need-to-learn
@@ -250,16 +327,17 @@ class ActionHistoryDependentLearning(object):
 # print("OneTimeLearning algorithm reward is", np.sum(agent.reward_))
 
 #%% unit test 3, debug SimplifiedDynamicLearning
-# from env import RandomInputI
+# from env import RandomInputI, RandomInputII
 
 # m = 4
 # n = 100
-# d = 0.25
+# d = 0.2
 # b = d * np.ones(m) * n
-# random_seed = 0
+# random_seed = 12345
 
-# env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
-# agent = SimplifiedDynamicLearning(m=m, n=n, b=b)
+# # env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
+# env = RandomInputII(m=m, n=n, b=b, random_seed=random_seed)
+# agent = SimplifiedDynamicLearning(m=m, n=n, b=b, solver="SCIP")
 # while not env.if_stop():
 #     r_t, a_t = env.deal()
 #     action = agent.action(r_t=r_t, a_t=a_t)
@@ -271,14 +349,14 @@ class ActionHistoryDependentLearning(object):
 # from time import time
 
 # m = 4
-# n = 500
+# n = 100
 # d = 0.25
 # b = d * np.ones(m) * n
 # random_seed = 0
 
 # # bench mark from offline linear programming
 # env = RandomInputI(m=m, n=n, b=b, random_seed=random_seed)
-# agent = ActionHistoryDependentLearning(m=m, n=n, b=b)
+# agent = ActionHistoryDependentLearning(m=m, n=n, b=b, solver="SCIP")
 # t1 = time()
 # while not env.if_stop():
 #     r_t, a_t = env.deal()
@@ -286,5 +364,3 @@ class ActionHistoryDependentLearning(object):
 #     env.observe(action)
 # t2 = time()
 # print(f"ActionHistoryDependentLearning algorithm reward is {np.sum(agent.reward_)}, time consumption is {t2-t1}")
-
-# %%
