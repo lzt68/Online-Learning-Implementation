@@ -30,7 +30,7 @@ class H1_OnlineLinearEnv(object):
         self.alpha = self.random_generator.beta(a=1.0, b=3.0)
         self.beta = self.random_generator.uniform(low=0.25, high=0.75)
 
-        self.p = self.random_generator.binomial(n=1, p=(1 + self.alpha) / 2, size=m)
+        self.p = (1 + self.random_generator.beta(a=1.0, b=3.0, size=m)) / 2
         self.rho = self.p * self.beta
         self.b = self.T * self.rho
 
@@ -38,7 +38,7 @@ class H1_OnlineLinearEnv(object):
         self.stop = False
 
         self.c = np.zeros((m, d, T))
-        self.r = np.zeros(T)
+        self.r = np.zeros((d, T))
 
         self.t = 1
 
@@ -49,10 +49,11 @@ class H1_OnlineLinearEnv(object):
                 c_j[ii, :] = self.random_generator.binomial(n=1, p=self.p[ii], size=self.d)
 
             r_j = self.theta @ c_j + self.random_generator.normal(loc=0.0, scale=1.0)
-            r_j[r_j > 10.0] = 10
+            r_j[r_j > 10.0] = 10.0
+            r_j[r_j < 0.0] = 0.0
 
             self.c[:, :, self.t - 1] = c_j
-            self.r[self.t - 1] = r_j
+            self.r[:, self.t - 1] = r_j
             return r_j, c_j
         else:
             return None
@@ -61,7 +62,7 @@ class H1_OnlineLinearEnv(object):
         consumption = self.c[:, :, self.t - 1] @ action
         self.total_consumption_ += consumption
         self.t += 1
-        if self.t > self.n or np.any(self.total_consumption_ > self.b):
+        if self.t > self.T or np.any(self.total_consumption_ > self.b):
             self.stop = True
 
     def if_stop(self):

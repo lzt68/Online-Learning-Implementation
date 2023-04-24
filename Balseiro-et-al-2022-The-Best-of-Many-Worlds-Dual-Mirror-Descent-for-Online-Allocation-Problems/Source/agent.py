@@ -4,7 +4,7 @@ from numpy.random import Generator, PCG64
 from typing import Union
 
 
-class DualMirrorDescentOGD_H1(object):
+class H1_DualMirrorDescentOGD(object):
     def __init__(self, m: int, T: int, d: int, b: np.array, rho: Union[float, np.float64], eta: Union[float, np.float64], solver="linprog") -> None:
         """Implement the algorithm for the problem instance in section H1
         Here we adopt the reference function as $h(\mu)=\frac{1}{2}\|\mu\|_2^2$
@@ -31,12 +31,14 @@ class DualMirrorDescentOGD_H1(object):
         self.remain_b = self.b.copy()
 
         self.r_t = np.zeros((d, T))
+        self.reward = np.zeros(T)  # the generated reward in each round
         self.c_t = np.zeros((m, d, T))
 
         self.action_ = np.zeros((d, T))
         self.reward_ = np.zeros(T)
 
-        self.mu = np.zeros(m)  # dual variable
+        self.mu_ = np.zeros((m, T))  # dual variable
+        self.mu = np.zeros(m)
 
         self.t = 1
         self.k = 0
@@ -48,13 +50,16 @@ class DualMirrorDescentOGD_H1(object):
         # calculate the decision variable
         tildex_t = self.action_get_tildex(r_t, c_t)
         if np.any(self.remain_b < c_t @ tildex_t):
-            x_t = tildex_t.copy()
-        else:
             x_t = np.zeros(self.d)
+        else:
+            x_t = tildex_t.copy()
+            self.remain_b -= c_t @ tildex_t
         self.action_[:, self.t - 1] = x_t
+        self.reward[self.t - 1] = r_t @ x_t
 
         # update the dual variables
         self.mu = self.action_get_mu_tp1(c_t, tildex_t)
+        self.mu_[:, self.t - 1] = self.mu.copy()
 
         self.t += 1
         return x_t
@@ -106,4 +111,42 @@ class DualMirrorDescentOGD_H1(object):
     def action_get_mu_tp1(self, c_t, action):
         g_t = -c_t @ action + self.rho
         mu = self.mu - self.eta * g_t
+        mu[mu < 0.0] = 0.0
         return mu
+
+
+#%% unit test 1, debug H1_OnlineLinearEnv and H1_DualMirrorDescentOGD
+# from env import H1_OnlineLinearEnv
+# import matplotlib.pyplot as plt
+
+# m = 4
+# T = 10
+# d = 4
+# random_seed = 0
+# s = 1.0
+
+# env = H1_OnlineLinearEnv(m=m, T=T, d=d, random_seed=random_seed)
+# agent = H1_DualMirrorDescentOGD(m=m, T=T, d=d, b=env.b, rho=env.rho, eta=s / np.sqrt(T * m))
+# while not env.if_stop():
+#     r_t, c_t = env.deal()
+#     action = agent.action(r_t=r_t, c_t=c_t)
+#     env.observe(action)
+
+# # calculate the upper bound
+# mu_mean = np.cumsum(agent.mu_, axis=1) / np.arange(1, T + 1)
+# reward_upper_bound = np.zeros(T)
+# for tt in range(0, T):
+#     for tt_ in range(0, tt + 1):
+#         reward_upper_bound[tt] += np.max(agent.r_t[:, tt_] - mu_mean[:, tt] @ agent.c_t[:, :, tt_])
+#     reward_upper_bound[tt] += (tt + 1) * agent.rho @ mu_mean[:, tt]
+
+# reward_upper_bound_temp = np.zeros(T)
+# for tt in range(0, T):
+#     reward_upper_bound_temp[tt] = np.sum(np.max(agent.r_t[:, 0 : tt + 1] - np.einsum("i,ijk->jk", mu_mean[:, tt], agent.c_t[:, :, 0 : tt + 1]), axis=0))
+#     reward_upper_bound_temp[tt] += (tt + 1) * agent.rho @ mu_mean[:, tt]
+# print(np.abs(np.max(reward_upper_bound_temp - reward_upper_bound)))
+
+# reward_agent = np.cumsum(agent.reward)
+
+# plt.plot(reward_upper_bound - reward_agent)
+# plt.show()
