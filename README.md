@@ -34,6 +34,8 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "Agrawal-et-al-2014-A_Dynamic_Near-Optimal_Algorithm_for_Online_Linear_Programming": https://pubsonline.informs.org/doi/abs/10.1287/opre.2014.1289
 
+"David-Xu-Bypassing_the_Monster_A_Faster_and_Simpler_Optimal_Algorithm_for_Contextual_Bandits_under_Realizability": https://papers.ssrn.com/abstract=3562765
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu
