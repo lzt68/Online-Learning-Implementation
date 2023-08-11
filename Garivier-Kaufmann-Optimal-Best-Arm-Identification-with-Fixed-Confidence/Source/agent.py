@@ -92,6 +92,7 @@ class D_Tracking(object):
         # generate dictionary to record realized reward and consumption
         self.pulling_times = np.zeros(K)
         self.mean_reward_ = np.zeros(K)
+        self.mean_consumption_ = np.zeros(K)
 
         self.action_ = list()
         self.reward_ = dict()
@@ -100,21 +101,77 @@ class D_Tracking(object):
             self.reward_[kk] = list()
             self.consumption_[kk] = list()
 
-        self.w = list()  # record the optimized pulling fraction in each round
+        # self.w = list()  # record the optimized pulling fraction in each round
         self.t = 1
 
-        self.g = lambda x: np.maximum(np.sqrt(x) - (K + 1) / 2, 0)
+        self.g = lambda x: np.maximum(np.sqrt(x) - (self.K + 1) / 2, 0)
+        self.beta = lambda x: np.log(2 * x * (self.K - 1) / self.delta)
+        self.d = lambda x, y: x * np.log(x / y) + (1 - x) * np.log((1 - x) / (1 - y))
+        self.if_stop = False
 
     def action(self):
-        pass
+        assert not self.if_stop, "The algorithm stopped"
+
+        U_t = np.array([aa for aa in range(0, self.K) if self.pulling_times[aa] <= self.g(self.t)])
+        if len(U_t) >= 1:
+            arm_index = np.argmin(self.pulling_times[U_t])
+            action = U_t[arm_index] + 1
+        else:
+            w_star = Get_w_star(self.mean_reward_)
+            action = np.argmax(self.t * w_star - self.pulling_times)
+        self.action_.append(action)
+
+        return action
 
     def observe(self, r, d):
-        act = self.action_[-1]
-        self.reward_[act].append(r)
-        self.consumption_[act].append(d)
+        assert not self.if_stop, "The algorithm stopped"
+
+        # record the observation
+        action = self.action_[-1]
+        self.reward_[action].append(r)
+        self.consumption_[action].append(d)
+
+        self.mean_reward_[action - 1] = (self.mean_reward_[action - 1] * self.pulling_times[action - 1]) + r
+        self.mean_consumption_[action - 1] = (self.mean_consumption_[action - 1] * self.pulling_times[action - 1]) + d
+
+        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] / (self.pulling_times[action - 1] + 1)
+        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] / (self.pulling_times[action - 1] + 1)
+        self.pulling_times[action - 1] += 1
+
+        # judge whether we should stop
+        # our stoppting rule is $\max_a\min_{b\ne a} Z_{a, b}(t) > \beta(t, \delta)$
+        empirical_best = np.argmax(self.mean_reward_)
+        # temp_weighted_reward = (
+        #     self.pulling_times[empirical_best] * self.mean_reward_[empirical_best]
+        #     + self.pulling_times * self.mean_reward_
+        # ) / (self.pulling_times[empirical_best] + self.pulling_times)
+
+        def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
+            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
+                best_pulling_times + pulling_times
+            )
+            z_ab_t = best_pulling_times * self.d(best_mean_reward, hat_mu_ab) + pulling_times * self.d(
+                mean_reward, hat_mu_ab
+            )
+            return z_ab_t
+
+        z_ = np.array(
+            [
+                get_z_ab_t(
+                    self.mean_reward_[empirical_best],
+                    self.pulling_times[empirical_best],
+                    self.mean_reward_[aa],
+                    self.pulling_times[aa],
+                )
+                for aa in range(self.K)
+                if aa != empirical_best
+            ]
+        )
+        if np.max(z_) > self.beta(self.t):
+            self.if_stop = True
 
 
-# # unit test 1, how to solve the optimal pull fraction given mu
+# %% unit test 1, how to solve the optimal pull fraction given mu
 # import time
 
 # T1 = time.time()
@@ -191,3 +248,5 @@ class D_Tracking(object):
 # T2 = time.time()
 # print(w_star)
 # print(f"Time Consumption is {T2-T1}")
+
+# %% unit test 2, test whether D-Tracking can work
