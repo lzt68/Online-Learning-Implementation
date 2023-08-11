@@ -36,6 +36,8 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "David-Xu-Bypassing_the_Monster_A_Faster_and_Simpler_Optimal_Algorithm_for_Contextual_Bandits_under_Realizability": https://papers.ssrn.com/abstract=3562765
 
+"Garivier-Kaufmann-Optimal-Best-Arm-Identification-with-Fixed-Confidence": https://arxiv.org/abs/1602.04589
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu
