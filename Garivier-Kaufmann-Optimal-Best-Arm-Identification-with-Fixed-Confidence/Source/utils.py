@@ -40,6 +40,9 @@ def F_fun(y, mu, K):
     ratio_sum = 0
     for aa in range(2, K + 1):
         x_a_y = x_fun(a=aa, y=y, mu=mu)
-        temp_mu = (mu[0] + x_a_y * mu[aa - 1]) / (1 + x_a_y)
-        ratio_sum += d_fun(mu[0], temp_mu) / d_fun(mu[aa - 1], temp_mu)
+        if np.abs(mu[0] - mu[aa - 1]) < 1e-6:
+            ratio_sum += 1.0
+        else:
+            temp_mu = (mu[0] + x_a_y * mu[aa - 1]) / (1 + x_a_y)
+            ratio_sum += d_fun(mu[0], temp_mu) / d_fun(mu[aa - 1], temp_mu)
     return ratio_sum

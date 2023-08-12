@@ -22,16 +22,21 @@ def Get_w_star(mu: np.ndarray):
     """
     K = mu.shape[0]
 
+    # sort the array of mean rewards to make sure decreasing order, switch back to the sequence when we get the weights
+    index = np.argsort(mu)[::-1]
+    mu_temp = mu.copy()
+    mu_temp = mu_temp[index]
+
     # use bisection to find the y^* such that F(y^*) = 1
     epsilon = 0.01
     left = 0
-    right = d_fun(mu[0], mu[1]) / 2
-    while F_fun(right, mu=mu, K=K) < 1:
+    right = d_fun(mu_temp[0], mu_temp[1]) / 2
+    while F_fun(right, mu=mu_temp, K=K) < 1:
         left = right
-        right = (d_fun(mu[0], mu[1]) + right) / 2
+        right = (d_fun(mu_temp[0], mu_temp[1]) + right) / 2
     temp = (left + right) / 2
-    while (np.abs(right - left) > epsilon) or (np.abs(F_fun(temp, mu=mu, K=K) - 1) > epsilon):
-        if F_fun(temp, mu=mu, K=K) >= 1:
+    while (np.abs(right - left) > epsilon) or (np.abs(F_fun(temp, mu=mu_temp, K=K) - 1) > epsilon):
+        if F_fun(temp, mu=mu_temp, K=K) >= 1:
             right = temp
         else:
             left = temp
@@ -39,8 +44,13 @@ def Get_w_star(mu: np.ndarray):
     y_star = (left + right) / 2
 
     # calculate the optimal pulling fraction
-    x_a_y_star = np.array([1.0] + [x_fun(a=aa, y=y_star, mu=mu) for aa in range(2, K + 1)])
+    x_a_y_star = np.array([1.0] + [x_fun(a=aa, y=y_star, mu=mu_temp) for aa in range(2, K + 1)])
     w_star = x_a_y_star / np.sum(x_a_y_star)
+
+    # switch back to the original sequence
+    index_back = np.zeros(K)
+    index_back[index] = np.arange(K, dtype=int)
+    w_star = w_star[index_back]
 
     return w_star
 
@@ -85,6 +95,7 @@ class D_Tracking(object):
             action = U_t[arm_index] + 1
         else:
             w_star = Get_w_star(self.mean_reward_)
+
             action = np.argmax(self.t * w_star - self.pulling_times) + 1
         self.action_.append(action)
 
@@ -226,7 +237,7 @@ class D_Tracking(object):
 from env import Env__Deterministic_Consumption
 
 K = 2
-mu = np.array([0.5, 0.45])
+mu = np.array([0.5, 0.3])
 delta = 0.1
 n_experiments = 10
 
