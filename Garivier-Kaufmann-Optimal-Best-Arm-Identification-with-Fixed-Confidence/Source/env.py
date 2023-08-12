@@ -40,7 +40,6 @@ class Env__Deterministic_Consumption(object):
             reward: The realized reward
             consumption: The realized consumption
         """
-        assert type(action) == int or type(action) == np.int32, "The arm index should be an integer"
         assert action >= 1 and action <= self.K, "The arm index should be in [K]"
 
         consumption = self.d[action - 1]
@@ -49,13 +48,13 @@ class Env__Deterministic_Consumption(object):
         return reward, consumption
 
 
-# unit test 1
-np.random.seed(12345)
-T = 10
-K = 4
-action = np.random.randint(low=1, high=K + 1, size=T)
+# %% unit test 1
+# np.random.seed(12345)
+# T = 10
+# K = 4
+# action = np.random.randint(low=1, high=K + 1, size=T)
 
-env = Env__Deterministic_Consumption(K=K)
-for nn in range(10):
-    r, d = env.response(action=action[nn])
-    print(f"round index {nn+1}, pulling arms {action[nn]}; reward {r}, consumption {d}")
+# env = Env__Deterministic_Consumption(K=K)
+# for nn in range(10):
+#     r, d = env.response(action=action[nn])
+#     print(f"round index {nn+1}, pulling arms {action[nn]}; reward {r}, consumption {d}")

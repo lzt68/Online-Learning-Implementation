@@ -5,6 +5,8 @@ from numpy import linalg
 from copy import deepcopy
 from scipy.optimize import minimize
 
+from utils import d_fun, I, g, x_fun, F_fun
+
 
 def Get_w_star(mu: np.ndarray):
     """Given the array of mean reward, solve the optimization problem and get the optimal pulling fraction
@@ -20,51 +22,16 @@ def Get_w_star(mu: np.ndarray):
     """
     K = mu.shape[0]
 
-    # notations and functions in the paper
-    def d(x, y):
-        return x * np.log(x / y) + (1 - x) * np.log((1 - x) / (1 - y))
-
-    def I(mu1, mu2, alpha):
-        mu_temp = alpha * mu1 + (1 - alpha) * mu2
-        return alpha * d(mu1, mu_temp) + (1 - alpha) * d(mu2, mu_temp)
-
-    def g(a, x):
-        alpha = 1 / (1 + x)
-        return (1 + x) * I(mu[0], mu[a - 1], alpha)
-
-    def x_fun(a, y, epsilon=0.001):
-        # a is in {1, 2, ..., K}
-        left = 0
-        right = 100
-        while g(a, right) < y:
-            left = right
-            right *= 2
-        while np.abs(right - left) > epsilon:
-            temp = (left + right) / 2
-            if g(a, temp) >= y:
-                right = temp
-            else:
-                left = temp
-        return (left + right) / 2
-
-    def F_fun(y):
-        ratio_sum = 0
-        for aa in range(2, K + 1):
-            x_a_y = x_fun(a=aa, y=y)
-            temp_mu = (mu[0] + x_a_y * mu[aa - 1]) / (1 + x_a_y)
-            ratio_sum += d(mu[0], temp_mu) / d(mu[aa - 1], temp_mu)
-        return ratio_sum
-
     # use bisection to find the y^* such that F(y^*) = 1
     epsilon = 0.01
     left = 0
-    right = d(mu[0], mu[1]) / 2
-    while F_fun(right) < 1:
+    right = d_fun(mu[0], mu[1]) / 2
+    while F_fun(right, mu=mu, K=K) < 1:
         left = right
-        right = (d(mu[0], mu[1]) + right) / 2
+        right = (d_fun(mu[0], mu[1]) + right) / 2
     temp = (left + right) / 2
-    while (np.abs(right - left) > epsilon) or (np.abs(F_fun(temp) - 1) > epsilon):
-        if F_fun(temp) >= 1:
+    while (np.abs(right - left) > epsilon) or (np.abs(F_fun(temp, mu=mu, K=K) - 1) > epsilon):
+        if F_fun(temp, mu=mu, K=K) >= 1:
             right = temp
         else:
             left = temp
@@ -72,7 +39,7 @@ def Get_w_star(mu: np.ndarray):
     y_star = (left + right) / 2
 
     # calculate the optimal pulling fraction
-    x_a_y_star = np.array([1.0] + [x_fun(a=aa, y=y_star) for aa in range(2, K + 1)])
+    x_a_y_star = np.array([1.0] + [x_fun(a=aa, y=y_star, mu=mu) for aa in range(2, K + 1)])
     w_star = x_a_y_star / np.sum(x_a_y_star)
 
     return w_star
@@ -118,7 +85,7 @@ class D_Tracking(object):
             action = U_t[arm_index] + 1
         else:
             w_star = Get_w_star(self.mean_reward_)
-            action = np.argmax(self.t * w_star - self.pulling_times)
+            action = np.argmax(self.t * w_star - self.pulling_times) + 1
         self.action_.append(action)
 
         return action
@@ -131,11 +98,9 @@ class D_Tracking(object):
         self.reward_[action].append(r)
         self.consumption_[action].append(d)
 
-        self.mean_reward_[action - 1] = (self.mean_reward_[action - 1] * self.pulling_times[action - 1]) + r
-        self.mean_consumption_[action - 1] = (self.mean_consumption_[action - 1] * self.pulling_times[action - 1]) + d
-
-        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] / (self.pulling_times[action - 1] + 1)
-        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] / (self.pulling_times[action - 1] + 1)
+        pull = self.pulling_times[action - 1]
+        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (pull / (pull + 1)) + r / (pull + 1)
+        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (pull / (pull + 1)) + d / (pull + 1)
         self.pulling_times[action - 1] += 1
 
         # judge whether we should stop
@@ -150,7 +115,7 @@ class D_Tracking(object):
             hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
                 best_pulling_times + pulling_times
             )
-            z_ab_t = best_pulling_times * self.d(best_mean_reward, hat_mu_ab) + pulling_times * self.d(
+            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
                 mean_reward, hat_mu_ab
             )
             return z_ab_t
@@ -169,6 +134,14 @@ class D_Tracking(object):
         )
         if np.max(z_) > self.beta(self.t):
             self.if_stop = True
+        self.t += 1
+
+    def predict(self):
+        best_arm = np.argmax(self.mean_reward_) + 1
+        return best_arm
+
+    def stop(self):
+        return self.if_stop
 
 
 # %% unit test 1, how to solve the optimal pull fraction given mu
@@ -250,3 +223,21 @@ class D_Tracking(object):
 # print(f"Time Consumption is {T2-T1}")
 
 # %% unit test 2, test whether D-Tracking can work
+from env import Env__Deterministic_Consumption
+
+K = 2
+mu = np.array([0.5, 0.45])
+delta = 0.1
+n_experiments = 10
+
+for exp_id in range(n_experiments):
+    count_round = 0
+
+    env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
+    agent = D_Tracking(K=K, delta=delta)
+
+    while not agent.if_stop:
+        action = agent.action()
+        reward, demand = env.response(action=action)
+        agent.observe(r=reward, d=demand)
+    print(f"predicted best arm is {agent.predict()}")
