@@ -10,7 +10,8 @@ Here we assume the reward follows Bernoulli Distribution.
 
 1. When we calculate $x\log \frac{x}{y}+(1-x)\log\frac{1-x}{1-y}$, we set a minimum threshold 0.001 and maximum threshold 0.999 for both x and y to avoid numeric error.
 
-2. When we calculate the optimal pulling fraction using empirical mean reward, it is possible $\hat{\mu}_1=\hat{\mu}_a$. Recall the proposed algorithm in the paper cannot deal with the case of multiple optimal arms. And the Theorem 1, Lemma 3, Lemma 4, Theorem 5 fail to apply to this case. In the implementation, we consider "unique optimal arm" is prior knowledge, and we use following limit to replace the ratio in the definition of $F_{\mu}$ in Theorem 5.
+2. 
+   When we calculate the optimal pulling fraction using empirical mean reward, it is possible $\hat{\mu}_1=\hat{\mu}_a$. Recall the proposed algorithm in the paper cannot deal with the case of multiple optimal arms. And the Theorem 1, Lemma 3, Lemma 4, Theorem 5 fail to apply to this case. In the implementation, we consider "unique optimal arm" is prior knowledge, and we use following limit to replace the ratio in the definition of $F_{\mu}$ in Theorem 5.
    $$
    \begin{align*}
    &\lim_{\mu_a \rightarrow \mu_1^-} \frac{\mu_1\log\frac{\mu_1}{w_1\mu_1+w_a\mu_a}+(1-\mu_1)\log\frac{1-\mu_1}{1-w_1\mu_1-w_a\mu_a}}{\mu_a\log\frac{\mu_a}{w_1\mu_1+w_a\mu_a}+(1-\mu_a)\log\frac{1-\mu_a}{1-w_1\mu_1-w_a\mu_a}}\\
@@ -23,30 +24,45 @@ Here we assume the reward follows Bernoulli Distribution.
    \end{align*}
    $$
    Here $w_1=\frac{1}{1+x_a(y)}, w_a=\frac{x_a(y)}{1+x_a(y)}$.
+   
+   3. Define $S_1=\{i: \hat{w}_i < \epsilon\}$, $S_2=\{i: \hat{w}_i \geq \epsilon\}$. If $S_1=\emptyset$, then projected $w$ is $\hat{w}$
 
-   3. When implementing C-Tracking, for a $\hat{w}$ based on the empirical mean rewards, we need to project $\hat{w}$ into $[0, 1]^K\cap \Sigma_K$. We conduct this project through solving the following linear optimization problem.
+      Define projected $w$ as
       $$
-      \begin{array}{rl}
-      \min & t\\
-      s.t. & w_i\geq \epsilon, \forall i\\
-      & w_i - \hat{w}_i\leq t\\
-      & -w_i + \hat{w}_i\leq t\\
-      & \sum_{i=1}^K w_i=1\\
-      & t\geq 0
-      \end{array}
+      w_i =\begin{cases}
+        \epsilon &  i\in S_1\\
+        \hat{w}_i-\frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} & i\in S_2
+        \end{cases}
       $$
-      Formulate it as the matrix form, we have
+      Prove $w = \arg\min_{\tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K} \|\tilde{w}-\hat{w}\|_{\infty}$, as the projected vector.
+
+      By our definition
       $$
-      \begin{array}{rl}
-      \min & [\underbrace{0, \cdots, 0}_K, 1][w_1, \cdots, w_K, t]^T\\
-      s.t. & 
-      \left[\begin{matrix}
-      -I_K & 0 \\
-      I_k & -1 \\
-      -I_k & -1 \\
-      \end{matrix}\right][w_1, \cdots, w_K, t]^T \leq 
-      [\underbrace{-\epsilon, \cdots, -\epsilon}_{K}, \hat{w}_1, \cdots, \hat{w}_K, -\hat{w}_1, \cdots, -\hat{w}_K]\\
-      & [\vec{1}_K \ 0] [w_1, \cdots, w_K, t]^T = 1
-      \end{array}
+      \|w - \hat{w}\|_{\infty} = \max\left\{\max_{i\in S_1}\epsilon-\hat{w}_i, \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} \right\}
       $$
-      
+      Easy to see  $\forall \tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K,  \|\tilde{w}-\hat{w}\|_{\infty}\geq \max_{i\in S_1}\epsilon-\hat{w}_i$, Then suffices to prove $\forall \tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K, \|\tilde{w}-\hat{w}\|_{\infty}\geq \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|}$.
+
+      For all $w\in \Sigma_{K}\cap [\epsilon, 1]^K$, we have
+      $$
+        \begin{align*}
+        &\sum_{i\in S_1}\hat{w}_i+\sum_{i\in S_2}\hat{w}_i = \sum_{i\in S_1}w_i+\sum_{i\in S_2}w_i=1\\
+        \Rightarrow & \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right)-\sum_{i\in S_2}\hat{w}_i + \sum_{i\in S_1}w_i+\sum_{i\in S_2}w_i=|S_1|\epsilon\\
+        \Leftrightarrow & \sum_{i\in S_2}(w_i-\hat{w}_i) = |S_1|\epsilon - \sum_{i\in S_1}w_i - \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right)
+        \end{align*}
+      $$
+      Since $w_i\geq \epsilon$, thus $|S_1|\epsilon - \sum_{i\in S_1}w_i\leq 0, |S_1|\epsilon - \sum_{i\in S_1}w_i - \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right) < 0$, we have
+      $$
+        \begin{align*}
+        & \sum_{i\in S_2}(w_i-\hat{w}_i) \leq  - \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right)\\
+        \Rightarrow & \min_{i\in S_2} w_i-\hat{w}_i\leq - \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
+        \Rightarrow & \max_{i\in S_2} \hat{w}_i-w_i\geq  \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
+        \Rightarrow & \max_{i\in S_2} |\hat{w}_i-w_i|\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
+        \Rightarrow & \max_{i\in [K]} |\hat{w}_i-w_i|\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
+        \end{align*}
+      $$
+
+      which implies $\|w-\hat{w}\|_{\infty}\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}$. Combining with $\|w-\hat{w}\|_{\infty}\geq \max_{i\in S_1}\epsilon-\hat{w}_i$, we have
+      $$
+      \|w - \hat{w}\|_{\infty} \geq \max\left\{\max_{i\in S_1}\epsilon-\hat{w}_i, \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} \right\},
+      $$
+      which implies our definition is indeed the projection.

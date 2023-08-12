@@ -125,12 +125,8 @@ class D_Tracking(object):
         empirical_best = np.argmax(self.mean_reward_)
 
         def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
-            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
-                best_pulling_times + pulling_times
-            )
-            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
-                mean_reward, hat_mu_ab
-            )
+            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (best_pulling_times + pulling_times)
+            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(mean_reward, hat_mu_ab)
             return z_ab_t
 
         z_ = np.array(
@@ -190,40 +186,15 @@ class C_Tracking(object):
 
     def get_projection(self, w, epsilon):
         # project the w into the $[\epsilon, 1]^K \cap \Sigma_K$, through solving linear optimization problem
-        # Please check README.md to validate the formulation of optimization problem
+        # Please check README.md to see why the following codes can find the projection
+        projected_w = np.zeros(self.K)
+        threshold_index = w < epsilon
+        projected_w[threshold_index] = epsilon
 
-        c = np.zeros(self.K + 1)
-        c[self.K] = 1
+        gap = np.sum(np.maximum(epsilon - w, 0))
+        projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
 
-        Aub = np.zeros((3 * self.K, self.K + 1))
-        Aub[0 : self.K, 0 : self.K] = -np.eye(self.K)
-        Aub[self.K : self.K * 2, 0 : self.K] = np.eye(self.K)
-        Aub[self.K : self.K * 2, self.K] = -1
-        Aub[self.K * 2 : self.K * 3, 0 : self.K] = -np.eye(self.K)
-        Aub[self.K * 2 : self.K * 3, self.K] = -1
-
-        bub = np.zeros(self.K * 3)
-        bub[0 : self.K] = -epsilon
-        bub[self.K : self.K * 2] = w
-        bub[self.K * 2 : self.K * 3] = -w
-
-        Aeq = np.ones((1, self.K + 1))
-        Aeq[0, self.K] = 0
-
-        beq = np.ones((1))
-        beq[0] = 1
-
-        res = linprog(c=c, A_ub=Aub, b_ub=bub, A_eq=Aeq, b_eq=beq)
-        return res.x
-
-        # projected_w = np.zeros(self.K)
-        # threshold_index = w < epsilon
-        # projected_w[threshold_index] = epsilon
-
-        # gap = np.sum(np.maximum(epsilon - w, 0))
-        # projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
-
-        # return projected_w
+        return projected_w
 
     def action(self):
         assert not self.if_stop, "The algorithm stopped"
@@ -237,7 +208,6 @@ class C_Tracking(object):
         self.sum_pulling_fraction = self.sum_pulling_fraction + projected_w
 
         action = np.argmax(self.sum_pulling_fraction - self.pulling_times) + 1
-
         self.action_.append(action)
 
         return action
@@ -260,12 +230,8 @@ class C_Tracking(object):
         empirical_best = np.argmax(self.mean_reward_)
 
         def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
-            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
-                best_pulling_times + pulling_times
-            )
-            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
-                mean_reward, hat_mu_ab
-            )
+            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (best_pulling_times + pulling_times)
+            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(mean_reward, hat_mu_ab)
             return z_ab_t
 
         z_ = np.array(
@@ -413,24 +379,45 @@ class C_Tracking(object):
 # print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
 
 # %% unit test 4, test the whether we can correctly solve the linear programming problem
-K = 4
-delta = 0.1
+# K = 4
+# delta = 0.1
 
-epsilon = 0.1
-# w = np.array([1.0, 0.0, 0.0, 0.0])
-w = np.random.uniform(size=K)
-w = w / np.sum(w)
+# epsilon = 0.1
+# # w = np.array([1.0, 0.0, 0.0, 0.0])
+# w = np.random.uniform(size=K)
+# w = w / np.sum(w)
 
-print(w)
+# print(w)
 
-agent = C_Tracking(K=K, delta=delta)
-projected_w = agent.get_projection(w, epsilon)
-print(projected_w, np.max(np.abs(w - projected_w[0:K])))
+# agent = C_Tracking(K=K, delta=delta)
+# projected_w = agent.get_projection(w, epsilon)
+# print(projected_w, np.max(np.abs(w - projected_w[0:K])))
 
 
-projected_w = np.zeros(K)
-threshold_index = w < epsilon
-projected_w[threshold_index] = epsilon
-gap = np.sum(np.maximum(epsilon - w, 0))
-projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
-print(projected_w, np.max(np.abs(w - projected_w)))
+# projected_w = np.zeros(K)
+# threshold_index = w < epsilon
+# projected_w[threshold_index] = epsilon
+# gap = np.sum(np.maximum(epsilon - w, 0))
+# projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
+# print(projected_w, np.max(np.abs(w - projected_w)))
+
+#%% unit test 5, test whether C-Tracking can work 
+# from env import Env__Deterministic_Consumption
+
+# K = 2
+# # mu = np.array([0.5, 0.3])
+# mu = np.array([0.3, 0.5])
+# delta = 0.1
+# n_experiments = 10
+
+# for exp_id in range(n_experiments):
+#     count_round = 0
+
+#     env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
+#     agent = C_Tracking(K=K, delta=delta)
+
+#     while not agent.if_stop:
+#         action = agent.action()
+#         reward, demand = env.response(action=action)
+#         agent.observe(r=reward, d=demand)
+#     print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
