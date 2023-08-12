@@ -24,4 +24,29 @@ Here we assume the reward follows Bernoulli Distribution.
    $$
    Here $w_1=\frac{1}{1+x_a(y)}, w_a=\frac{x_a(y)}{1+x_a(y)}$.
 
-3. 
+   3. When implementing C-Tracking, for a $\hat{w}$ based on the empirical mean rewards, we need to project $\hat{w}$ into $[0, 1]^K\cap \Sigma_K$. We conduct this project through solving the following linear optimization problem.
+      $$
+      \begin{array}{rl}
+      \min & t\\
+      s.t. & w_i\geq \epsilon, \forall i\\
+      & w_i - \hat{w}_i\leq t\\
+      & -w_i + \hat{w}_i\leq t\\
+      & \sum_{i=1}^K w_i=1\\
+      & t\geq 0
+      \end{array}
+      $$
+      Formulate it as the matrix form, we have
+      $$
+      \begin{array}{rl}
+      \min & [\underbrace{0, \cdots, 0}_K, 1][w_1, \cdots, w_K, t]^T\\
+      s.t. & 
+      \left[\begin{matrix}
+      -I_K & 0 \\
+      I_k & -1 \\
+      -I_k & -1 \\
+      \end{matrix}\right][w_1, \cdots, w_K, t]^T \leq 
+      [\underbrace{-\epsilon, \cdots, -\epsilon}_{K}, \hat{w}_1, \cdots, \hat{w}_K, -\hat{w}_1, \cdots, -\hat{w}_K]\\
+      & [\vec{1}_K \ 0] [w_1, \cdots, w_K, t]^T = 1
+      \end{array}
+      $$
+      
