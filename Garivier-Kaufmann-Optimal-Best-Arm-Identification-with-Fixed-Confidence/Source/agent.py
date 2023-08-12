@@ -27,6 +27,10 @@ def Get_w_star(mu: np.ndarray):
     mu_temp = mu.copy()
     mu_temp = mu_temp[index]
 
+    if np.abs(mu_temp[0] - mu_temp[1]) < 1e-6:
+        # if \hat{\mu}_1 is equal to \hat{\mu}_2, we return uniform sampling weight
+        return np.ones(K) / K
+
     # use bisection to find the y^* such that F(y^*) = 1
     epsilon = 0.01
     left = 0
@@ -35,12 +39,15 @@ def Get_w_star(mu: np.ndarray):
         left = right
         right = (d_fun(mu_temp[0], mu_temp[1]) + right) / 2
     temp = (left + right) / 2
+
+    count = 0
     while (np.abs(right - left) > epsilon) or (np.abs(F_fun(temp, mu=mu_temp, K=K) - 1) > epsilon):
         if F_fun(temp, mu=mu_temp, K=K) >= 1:
             right = temp
         else:
             left = temp
         temp = (left + right) / 2
+        count += 1
     y_star = (left + right) / 2
 
     # calculate the optimal pulling fraction
@@ -49,8 +56,8 @@ def Get_w_star(mu: np.ndarray):
 
     # switch back to the original sequence
     index_back = np.zeros(K)
-    index_back[index] = np.arange(K, dtype=int)
-    w_star = w_star[index_back]
+    index_back[index] = np.arange(K)
+    w_star = w_star[index_back.astype(int)]
 
     return w_star
 
@@ -237,7 +244,8 @@ class D_Tracking(object):
 from env import Env__Deterministic_Consumption
 
 K = 2
-mu = np.array([0.5, 0.3])
+# mu = np.array([0.5, 0.3])
+mu = np.array([0.3, 0.5])
 delta = 0.1
 n_experiments = 10
 
@@ -251,4 +259,4 @@ for exp_id in range(n_experiments):
         action = agent.action()
         reward, demand = env.response(action=action)
         agent.observe(r=reward, d=demand)
-    print(f"predicted best arm is {agent.predict()}")
+    print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
