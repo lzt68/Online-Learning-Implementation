@@ -376,7 +376,7 @@ class C_Tracking(object):
 #         action = agent.action()
 #         reward, demand = env.response(action=action)
 #         agent.observe(r=reward, d=demand)
-# print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
+#     print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
 
 # %% unit test 4, test the whether we can correctly solve the linear programming problem
 # K = 4
@@ -421,3 +421,24 @@ class C_Tracking(object):
 #         reward, demand = env.response(action=action)
 #         agent.observe(r=reward, d=demand)
 #     print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
+
+# %% unit test 6, test whether C-Tracking can work on a larger scale
+from env import Env__Deterministic_Consumption
+
+K = 4
+# mu = np.array([0.5, 0.3])
+mu = np.array([0.3, 0.8, 0.4, 0.2])
+delta = 0.1
+n_experiments = 10
+
+for exp_id in range(n_experiments):
+    count_round = 0
+
+    env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
+    agent = C_Tracking(K=K, delta=delta)
+
+    while not agent.if_stop:
+        action = agent.action()
+        reward, demand = env.response(action=action)
+        agent.observe(r=reward, d=demand)
+    print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
