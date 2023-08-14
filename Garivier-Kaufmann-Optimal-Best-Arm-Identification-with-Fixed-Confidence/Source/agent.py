@@ -5,61 +5,7 @@ from numpy import linalg
 from copy import deepcopy
 from scipy.optimize import minimize, linprog
 
-from utils import d_fun, I, g, x_fun, F_fun
-
-
-def Get_w_star(mu: np.ndarray):
-    """Given the array of mean reward, solve the optimization problem and get the optimal pulling fraction
-    The optimization target is
-    $$
-        w^*(\mu)=\arg\max_{w\in\Sigma_K} \min_{a\ne 1}(w_1+w_a)I_{\frac{w_1}{w_1+w_a}}(\mu_1, \mu_a)
-    $$
-    where $I_{\alpha}(\mu_1, \mu_2)=\alpha d\left(\mu_1, \alpha\mu_1+(1-\alpha)\mu_2\right)+(1-\alpha)d(\mu_2, \alpha\mu_1+(1-\alpha)\mu_2)$
-    and $d(x,y)=x\log\frac{x}{y}+(1-x)\log\frac{1-x}{1-y}$
-
-    Args:
-        mu (np.ndarray): Array of mean rewards
-    """
-    K = mu.shape[0]
-
-    # sort the array of mean rewards to make sure decreasing order, switch back to the sequence when we get the weights
-    index = np.argsort(mu)[::-1]
-    mu_temp = mu.copy()
-    mu_temp = mu_temp[index]
-
-    if np.abs(mu_temp[0] - mu_temp[1]) < 1e-6:
-        # if \hat{\mu}_1 is equal to \hat{\mu}_2, we return uniform sampling weight
-        return np.ones(K) / K
-
-    # use bisection to find the y^* such that F(y^*) = 1
-    epsilon = 0.01
-    left = 0
-    right = d_fun(mu_temp[0], mu_temp[1]) / 2
-    while F_fun(right, mu=mu_temp, K=K) < 1:
-        left = right
-        right = (d_fun(mu_temp[0], mu_temp[1]) + right) / 2
-    temp = (left + right) / 2
-
-    count = 0
-    while (np.abs(right - left) > epsilon) or (np.abs(F_fun(temp, mu=mu_temp, K=K) - 1) > epsilon):
-        if F_fun(temp, mu=mu_temp, K=K) >= 1:
-            right = temp
-        else:
-            left = temp
-        temp = (left + right) / 2
-        count += 1
-    y_star = (left + right) / 2
-
-    # calculate the optimal pulling fraction
-    x_a_y_star = np.array([1.0] + [x_fun(a=aa, y=y_star, mu=mu_temp) for aa in range(2, K + 1)])
-    w_star = x_a_y_star / np.sum(x_a_y_star)
-
-    # switch back to the original sequence
-    index_back = np.zeros(K)
-    index_back[index] = np.arange(K)
-    w_star = w_star[index_back.astype(int)]
-
-    return w_star
+from utils import d_fun, I, g, x_fun, F_fun, Get_w_star
 
 
 class D_Tracking(object):
@@ -101,7 +47,6 @@ class D_Tracking(object):
             action = U_t[arm_index] + 1
         else:
             w_star = Get_w_star(self.mean_reward_)
-
             action = np.argmax(self.t * w_star - self.pulling_times) + 1
         self.action_.append(action)
 
@@ -125,8 +70,12 @@ class D_Tracking(object):
         empirical_best = np.argmax(self.mean_reward_)
 
         def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
-            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (best_pulling_times + pulling_times)
-            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(mean_reward, hat_mu_ab)
+            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
+                best_pulling_times + pulling_times
+            )
+            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
+                mean_reward, hat_mu_ab
+            )
             return z_ab_t
 
         z_ = np.array(
@@ -230,8 +179,12 @@ class C_Tracking(object):
         empirical_best = np.argmax(self.mean_reward_)
 
         def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
-            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (best_pulling_times + pulling_times)
-            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(mean_reward, hat_mu_ab)
+            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
+                best_pulling_times + pulling_times
+            )
+            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
+                mean_reward, hat_mu_ab
+            )
             return z_ab_t
 
         z_ = np.array(
@@ -401,7 +354,7 @@ class C_Tracking(object):
 # projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
 # print(projected_w, np.max(np.abs(w - projected_w)))
 
-#%% unit test 5, test whether C-Tracking can work 
+# %% unit test 5, test whether C-Tracking can work
 # from env import Env__Deterministic_Consumption
 
 # K = 2
@@ -423,22 +376,61 @@ class C_Tracking(object):
 #     print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
 
 # %% unit test 6, test whether C-Tracking can work on a larger scale
-from env import Env__Deterministic_Consumption
+# from env import Env__Deterministic_Consumption
 
-K = 4
-# mu = np.array([0.5, 0.3])
-mu = np.array([0.3, 0.8, 0.4, 0.2])
-delta = 0.1
-n_experiments = 10
+# K = 4
+# # mu = np.array([0.5, 0.3])
+# mu = np.array([0.3, 0.8, 0.4, 0.2])
+# delta = 0.1
+# n_experiments = 10
 
-for exp_id in range(n_experiments):
-    count_round = 0
+# for exp_id in range(n_experiments):
+#     count_round = 0
 
-    env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
-    agent = C_Tracking(K=K, delta=delta)
+#     env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
+#     agent = C_Tracking(K=K, delta=delta)
 
-    while not agent.if_stop:
-        action = agent.action()
-        reward, demand = env.response(action=action)
-        agent.observe(r=reward, d=demand)
-    print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
+#     while not agent.if_stop:
+#         action = agent.action()
+#         reward, demand = env.response(action=action)
+#         agent.observe(r=reward, d=demand)
+#     print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
+# %% unit test 7, conduct the numeric experiment
+# from tqdm import tqdm
+# from env import Env__Deterministic_Consumption
+
+# # conduct the experiment
+# n_experiments = 10
+# delta_ = [0.1, 0.05, 0.01, 0.005]
+
+# # container of numeric record
+# pulling_times = dict()
+# predicted_arm = dict()
+# best_arm = dict()
+
+# pulling_times["D-Tracking"] = np.zeros((len(delta_), n_experiments))
+# predicted_arm["D-Tracking"] = np.zeros((len(delta_), n_experiments))
+# best_arm["D-Tracking"] = np.zeros((len(delta_), n_experiments))
+
+# # synthesis setting
+# mu = np.array([0.5, 0.2, 0.3, 0.4])
+# K = 4
+
+# # run the algorithm
+# np.random.seed(12345)
+# for ii, delta in enumerate(delta_):
+#     for exp_id in tqdm(range(n_experiments)):
+#         # shuffle the best arm
+#         mu_temp = mu.copy()
+#         np.random.shuffle(mu_temp)
+#         best_arm["D-Tracking"][ii, exp_id] = np.argmax(mu_temp) + 1
+
+#         # create the agent instance and run the experiment
+#         env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
+#         agent = D_Tracking(K=K, delta=delta)
+#         while not agent.if_stop:
+#             action = agent.action()
+#             reward, demand = env.response(action=action)
+#             agent.observe(r=reward, d=demand)
+#         predicted_arm["D-Tracking"][ii, exp_id] = agent.predict()
+#         pulling_times["D-Tracking"][ii, exp_id] = agent.t - 1
