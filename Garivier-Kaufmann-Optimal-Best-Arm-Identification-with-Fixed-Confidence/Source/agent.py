@@ -35,7 +35,7 @@ class D_Tracking(object):
         self.t = 1
 
         self.g = lambda x: np.maximum(np.sqrt(x) - (self.K + 1) / 2, 0)
-        self.beta = lambda x: np.log(2 * x * (self.K - 1) / self.delta)
+        self.beta = lambda x: np.log(2 * x * (self.K - 1)) + np.log(1 / self.delta)
         self.if_stop = False
 
     def action(self):
@@ -130,7 +130,7 @@ class C_Tracking(object):
         self.t = 1
 
         self.g = lambda x: np.maximum(np.sqrt(x) - (self.K + 1) / 2, 0)
-        self.beta = lambda x: np.log(2 * x * (self.K - 1) / self.delta)
+        self.beta = lambda x: np.log(2 * x * (self.K - 1)) + np.log(1 / self.delta)
         self.if_stop = False
 
     def get_projection(self, w, epsilon):
