@@ -9,11 +9,22 @@ class Env_Gaussian_Fixedmu0(object):
     def __init__(
         self,
         K: int,
+        n: int,
         mu0: Union[np.float64, int, float],
         r_list: np.ndarray,
         sigma: float = 1.0,
         random_seed: int = 12345,
     ) -> None:
+        """The environment that return Gaussian reward with fixed variance.
+
+        Args:
+            K (int): Number of alternative arms.
+            n (int): Total number of rounds
+            mu0 (Union[np.float64, int, float]): The mean reward of default value
+            r_list (np.ndarray): Mean reward of each arm.
+            sigma (float, optional): _description_. Defaults to 1.0.
+            random_seed (int, optional): _description_. Defaults to 12345.
+        """
         """The environment that return Gaussian reward with fixed variance.
 
         Args:
@@ -26,15 +37,22 @@ class Env_Gaussian_Fixedmu0(object):
         assert mu0 > 0.0 and mu0 < 1.0, "mu0 is not in (0, 1)"
 
         self.K = K
+        self.n = n
         self.mu0 = mu0
         self.r_list = r_list
         self.sigma = sigma
         self.random_seed = random_seed
         self.random_generator = Generator(PCG64(random_seed))
 
+        self.t = 0
+
     def response(self, arm):
         if arm == 0:
             reward = self.mu0
         else:
-            reward = self.random_generator.normal(loc=self.r_list[arm], scale=self.sigma)
+            reward = self.random_generator.normal(loc=self.r_list[arm - 1], scale=self.sigma)
+        self.t += 1
         return reward
+
+    def if_stop(self):
+        return self.t > self.n
