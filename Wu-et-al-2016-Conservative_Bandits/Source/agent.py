@@ -157,7 +157,11 @@ class Conservative_UCB_rad2(object):
         psi_s = (
             np.log(np.maximum(3, np.log(zeta)))
             + np.log(2 * (np.e**2) * zeta)
-            + zeta * (1 + np.log(zeta)) / (zeta - 1) / np.log(zeta) * np.maximum(np.log(np.log(1 + s)), 1)
+            + zeta
+            * (1 + np.log(zeta))
+            / (zeta - 1)
+            / np.log(zeta)
+            * np.maximum(np.log(np.maximum(np.log(1 + s), 1)), 1)
         )
         return psi_s
 
@@ -386,3 +390,81 @@ class Conservative_UCB_Overall_Lower_Bound(object):
 # print(f"True real reward is {r_list}")
 # print(f"Pulling times of each arm {agent.pulling_times_}")
 # print(f"Observed mean reward is {agent.mean_reward_}")
+
+# %% unit test 5, try to conduct numeric experiments
+# import numpy as np
+# import pandas as pd
+# from env import Env_Gaussian_Fixedmu0
+
+# record = pd.DataFrame(
+#     columns=["K", "n", "mu0", "r_list", "algorithm", "alpha", "delta", "Total_Reward", "Regret", "ratio"]
+# )
+
+# K_ = np.array([5, 10, 20])  # number of arms
+# # n_over_K_ = np.arange(10, 35, 10) # here we determine the total number of rounds as K * c,
+# n_over_K = 10
+# alg_class = [Conservative_UCB, Conservative_UCB_rad2, Conservative_UCB_Overall_Lower_Bound]
+# mu0 = 0.6
+# alpha = 1 / 6  # the safety threshold is 0.5
+# delta = 0.1
+
+# n_exp = 5
+# for K in K_:
+#     n = K * n_over_K
+#     for alg in alg_class:
+#         total_regert__ = np.zeros((n_exp, n))
+#         total_reward__ = np.zeros((n_exp, n))
+#         ratio__ = np.zeros((n_exp, n))
+
+#         for exp_id in range(n_exp):
+#             regret_ = np.zeros(n)
+#             reward_ = np.zeros(n)
+
+#             r_list = np.ones(K) * 0.65
+#             r_list[0] = 0.7
+#             best_reward = np.maximum(np.max(r_list), mu0)
+
+#             # shuffle the arms
+#             np.random.seed(exp_id)
+#             permuted_index = np.arange(K)
+#             np.random.shuffle(permuted_index)
+#             r_list = r_list[permuted_index]
+
+#             env = Env_Gaussian_Fixedmu0(K=K, mu0=mu0, r_list=r_list, random_seed=exp_id, n=n)
+#             agent = alg(K=K, mu0=mu0, alpha=alpha, delta=delta)
+#             while not env.if_stop():
+#                 arm = agent.action()
+#                 reward = env.response(arm=arm)
+#                 agent.observe(reward=reward)
+
+#                 if arm == 0:
+#                     reward_[env.t - 1] = mu0
+#                     regret_[env.t - 1] = best_reward - mu0
+#                 else:
+#                     reward_[env.t - 1] = r_list[arm - 1]
+#                     regret_[env.t - 1] = best_reward - r_list[arm - 1]
+
+#             total_regert_ = np.cumsum(regret_)
+#             total_reward_ = np.cumsum(reward_)
+#             ratio_ = total_regert_ / np.arange(1, n + 1, 1)
+
+#             total_regert__[exp_id, :] = total_regert_
+#             total_reward__[exp_id, :] = total_reward_
+#             ratio__[exp_id, :] = ratio_
+
+#         # safe the numeric record
+#         record.loc[record.shape[0]] = np.array(
+#             [
+#                 K,
+#                 n,
+#                 mu0,
+#                 np.array2string(r_list, threshold=11e3),
+#                 alg.__name__,
+#                 alpha,
+#                 delta,
+#                 np.array2string(total_reward__, threshold=11e3),
+#                 np.array2string(total_regert__, threshold=11e3),
+#                 np.array2string(ratio__, threshold=11e3),
+#             ],
+#             dtype=object,
+#         )

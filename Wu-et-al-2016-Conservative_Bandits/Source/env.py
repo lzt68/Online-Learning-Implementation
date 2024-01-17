@@ -40,7 +40,7 @@ class Env_Gaussian_Fixedmu0(object):
         self.random_seed = random_seed
         self.random_generator = Generator(PCG64(random_seed))
 
-        self.if_violation = False  # Mark whether there is violation of safety constraint
+        self.violation = False  # Mark whether there is violation of safety constraint
         self.total_reward = 0
 
         self.t = 0
@@ -61,7 +61,7 @@ class Env_Gaussian_Fixedmu0(object):
         return reward
 
     def if_stop(self):
-        return self.t > self.n
+        return self.t >= self.n
 
     def if_violation(self):
-        return self.if_violation
+        return self.violation
