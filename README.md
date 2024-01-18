@@ -38,6 +38,8 @@ A method for generating uniformly distributed points on N-dimensional spheres.pd
 
 "Garivier-Kaufmann-Optimal-Best-Arm-Identification-with-Fixed-Confidence": https://arxiv.org/abs/1602.04589
 
+"Wu-et-al-2016-Conservative_Bandits": http://arxiv.org/abs/1602.04282
+
 ## Contact
 
 LI ZITIAN: lizitian@u.nus.edu
