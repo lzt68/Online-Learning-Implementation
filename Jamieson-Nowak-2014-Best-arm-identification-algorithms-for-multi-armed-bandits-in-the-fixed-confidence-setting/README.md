@@ -1,6 +1,6 @@
 # README
 
-We aims to reproduce the figure 1 in Jamieson & Nowak 2014 "Best-arm identification algorithms for multi-armed bandits in the fixed confidence setting"
+We aim to reproduce the figure 1 in Jamieson & Nowak 2014 "Best-arm identification algorithms for multi-armed bandits in the fixed confidence setting"
 
 ## Experiment Setting
 
