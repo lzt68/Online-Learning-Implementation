@@ -86,8 +86,22 @@ class BracketingUCB_epsilon_good(object):
 
     def U(self, t, delta):
         c = 4  # the original paper doesn't specify the value of c
-        ucb = c * np.sqrt(np.maximum(np.log(np.log(t) / delta), 1) / t)
-        return ucb
+        conf = c * np.sqrt(np.maximum(np.log(np.maximum(np.log(t), 1) / delta), 1) / t)
+        return conf
+
+    def predict(self):
+        # bracketing UCB should be an anytime algorithm
+        lcb_max = -np.infty
+        arm_lcb_max = 0
+        for rr in range(1, self.l + 1):
+            for ii in self.bracket_[rr]:
+                delta_ar_rr = self.delta / (len(self.bracket_[rr])) / (rr**2)
+                conf = self.U(self.pulling_times_[rr][ii], delta_ar_rr)
+                lcb = self.mean_reward_[rr][ii] - conf
+                if lcb > lcb_max:
+                    lcb_max = lcb
+                    arm_lcb_max = ii
+        return arm_lcb_max
 
 
 class BracketingUCB_k_identification(object):
@@ -102,3 +116,21 @@ class BracketingUCB_k_identification(object):
 
     def U(self):
         pass
+
+
+# %% unit test 1, test BracketingUCB_epsilon_good
+# np.random.seed(0)
+# K = 4
+# delta = 0.1
+# epsilon = 0.1
+
+# T = 500
+
+# agent = BracketingUCB_epsilon_good(K=K, delta=delta, epsilon=epsilon)
+# predicted_arm_ = np.zeros(T)
+# for tt in range(T):
+#     arm = agent.action()
+#     reward = arm * 0.5 + np.random.uniform(low=-0.3, high=0.3)
+#     agent.observe(reward=reward)
+#     predicted_arm_[tt] = agent.predict()
+# print(predicted_arm_[-100:])
