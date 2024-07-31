@@ -277,6 +277,9 @@ class BracketingUCB_epsilon_good_heuristic(object):
            larger size.
            Here we conduct a test after each pull, to check whether we should eliminate any bracket.
 
+        Since the algorithm share the sampling points among all the brackets, this implementation donot differentiate
+        the confidence level when calculating the predicted arm at each round, but use the same delta
+
 
         Args:
             K (int): Number of arms.
@@ -335,21 +338,24 @@ class BracketingUCB_epsilon_good_heuristic(object):
                     )
                     self.bracket_[self.num_bracket] = bracket
 
-                self.phase_length = 2**self.l  # setup the length of this new phase
+                self.phase_length = 2**self.l - 1  # setup the length of this new phase
                 # find the existing minimum bracket index
                 self.R_list = list(self.bracket_.keys())
 
             # determine the pulling arm
-            self.R = self.R_list.pop(0)
             if len(self.R_list) == 0:
                 self.phase_length -= 1
+                self.R_list = list(self.bracket_.keys())
+                self.R = self.R_list.pop(0)
+            else:
+                self.R = self.R_list.pop(0)
             bracket = self.bracket_[self.R]
             mean_reward_bracket = self.mean_reward_[bracket - 1].copy()
             high_prob_UCB = np.array(
                 [self.mean_reward_[ii - 1] + self.U(self.pulling_times_[ii - 1], self.delta) for ii in bracket]
             )
             ht = bracket[np.argmax(high_prob_UCB)]
-            mean_reward_bracket[ht] = -np.inf
+            mean_reward_bracket[np.argmax(high_prob_UCB)] = -np.inf
             lt = bracket[np.argmax(mean_reward_bracket)]
             self.pulling_list.append((self.R, ht))
             self.pulling_list.append((self.R, lt))
@@ -361,24 +367,26 @@ class BracketingUCB_epsilon_good_heuristic(object):
 
     def observe(self, reward):
         R, arm = self.action_[-1]
-        self.total_reward_[R][arm] += reward
-        self.pulling_times_[R][arm] += 1
-        self.mean_reward_[R][arm] = self.total_reward_[R][arm] / self.pulling_times_[R][arm]
+        self.total_reward_[arm - 1] += reward
+        self.pulling_times_[arm - 1] += 1
+        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
         self.t += 1
 
         # conduct a test to see whether we should eliminate some brackets
-        high_prob_lcb = self.mean_reward_ - np.array(
-            [self.U(self.pulling_times_[aa - 1], self.delta) for aa in range(1, self.K + 1)]
-        )
-        bracket_list = np.sort(list(self.bracket_.keys()))
-        # use brute-force method to check whether we should eliminate any arm
-        for index, rr in enumerate(bracket_list):
-            high_prob_lcb_rr = high_prob_lcb[rr - 1]
-            for index_ in range(index + 1, len(bracket_list)):
-                high_prob_lcb_nextrr = high_prob_lcb[bracket_list[index_] - 1]
-                if high_prob_lcb_nextrr > high_prob_lcb_rr:  # we should eliminate rr
-                    self.bracket_.pop(rr, None)
-                    self.R_list.remove(rr)
+        if self.t > self.K:
+            high_prob_lcb = self.mean_reward_ - np.array(
+                [self.U(self.pulling_times_[aa - 1], self.delta) for aa in range(1, self.K + 1)]
+            )
+            bracket_list = np.sort(list(self.bracket_.keys()))
+            # use brute-force method to check whether we should eliminate any arm
+            for index, rr in enumerate(bracket_list):
+                high_prob_lcb_rr = np.max(high_prob_lcb[self.bracket_[rr] - 1])
+                for index_ in range(index + 1, len(bracket_list)):
+                    high_prob_lcb_nextrr = np.max(high_prob_lcb[self.bracket_[bracket_list[index_]] - 1])
+                    if high_prob_lcb_nextrr > high_prob_lcb_rr:  # we should eliminate rr
+                        self.bracket_.pop(rr, None)
+                        if rr in self.R_list:
+                            self.R_list.remove(rr)
 
     def U(self, t, delta):
         c = 4  # the original paper doesn't specify the value of c
@@ -387,19 +395,14 @@ class BracketingUCB_epsilon_good_heuristic(object):
 
     def predict(self):
         # bracketing UCB should be an anytime algorithm
-        lcb_max = -np.infty
-        arm_lcb_max = 0
-        for rr in range(1, self.l + 1):
-            for ii in self.bracket_[rr]:
-                if self.pulling_times_[rr][ii] == 0:
-                    continue
-                delta_ar_rr = self.delta / (len(self.bracket_[rr])) / (rr**2)
-                conf = self.U(self.pulling_times_[rr][ii], delta_ar_rr)
-                lcb = self.mean_reward_[rr][ii] - conf
-                if lcb > lcb_max:
-                    lcb_max = lcb
-                    arm_lcb_max = ii
-        return arm_lcb_max
+        if self.t <= self.K:
+            # The algorithm still needs to pull each arm at least once
+            return 0
+        else:
+            conf = np.array([self.U(self.pulling_times_[arm - 1], self.delta) for arm in range(1, self.K + 1)])
+            lcb = self.mean_reward_ - conf
+            arm_lcb_max = np.argmax(lcb) + 1
+            return arm_lcb_max
 
 
 # %% unit test 1, test BracketingUCB_epsilon_good
@@ -439,4 +442,23 @@ class BracketingUCB_epsilon_good_heuristic(object):
 #     predicted_arm_.append(agent.predict())
 #     if agent.if_stop():
 #         break
+# print(predicted_arm_[-100:])
+
+# %% unit test 3, test BracketingUCB_epsilon_good_heuristic
+# np.random.seed(0)
+# K = 15
+# delta = 0.1
+# epsilon = 0.1
+# mu0 = 0
+
+# T = 5000
+
+# # agent = BracketingUCB_epsilon_good(K=K, delta=delta, epsilon=epsilon)
+# agent = BracketingUCB_epsilon_good_heuristic(K=K, start_size=2, delta=delta)
+# predicted_arm_ = []
+# for tt in range(T):
+#     arm = agent.action()
+#     reward = arm * 0.5 + np.random.uniform(low=-0.3, high=0.3)
+#     agent.observe(reward=reward)
+#     predicted_arm_.append(agent.predict())
 # print(predicted_arm_[-100:])
