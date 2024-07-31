@@ -357,8 +357,6 @@ class BracketingUCB_epsilon_good_heuristic(object):
             # return the arm to be pulled
             RR, arm = self.pulling_list.pop(0)
             self.action_.append((RR, arm))
-            self.t += 1
-            self.phase_length -= 1
             return arm
 
     def observe(self, reward):
