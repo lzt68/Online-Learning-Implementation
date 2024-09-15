@@ -276,23 +276,64 @@ class APT_G_Kano(object):
 # print(f"output time is {output_time}, output arms are {output_list}")
 
 # %% unit test 3, test APT_G_Kano
+# from env import Environment_Bernoulli
+
+# rlist = [0.1, 0.2, 0.7, 0.8]
+# K = len(rlist)
+# xi = 0.5
+# delta = 0.1
+
+# env = Environment_Bernoulli(rlist=rlist, K=K, random_seed=12345)
+# agent = APT_G_Kano(K=K, delta=delta, xi=xi)
+# output_list = []
+# output_time = []
+# while not agent.stop:
+#     arm = agent.action()
+#     reward = env.response(arm)
+#     output_arm = agent.observe(reward)
+#     if output_arm is not None:
+#         output_list.append(output_arm)
+#         output_time.append(agent.t)
+# output_time.append(agent.t)
+# print(f"output time is {output_time}, output arms are {output_list}")
+
+# %% unit test 4, experiment script
 from env import Environment_Bernoulli
+from tqdm import tqdm
 
-rlist = [0.1, 0.2, 0.7, 0.8]
-K = len(rlist)
+# use Threshold 1 setting
+K = 10
+rlist = np.ones(10)
+rlist[0:3] = 0.1
+rlist[3:7] = 0.35 + 0.1 * np.arange(4)
+rlist[7:10] = 0.9
 xi = 0.5
-delta = 0.1
+delta = 0.05
 
-env = Environment_Bernoulli(rlist=rlist, K=K, random_seed=12345)
-agent = APT_G_Kano(K=K, delta=delta, xi=xi)
-output_list = []
-output_time = []
-while not agent.stop:
-    arm = agent.action()
-    reward = env.response(arm)
-    output_arm = agent.observe(reward)
-    if output_arm is not None:
-        output_list.append(output_arm)
-        output_time.append(agent.t)
-output_time.append(agent.t)
-print(f"output time is {output_time}, output arms are {output_list}")
+n_exp = 1000
+output_time_ = np.zeros(
+    (n_exp, K)
+)  # if correct, there should be only 5 output (not include stop)
+stop_time_ = np.zeros(n_exp)
+correctness_ = np.ones(n_exp)
+for exp_id in tqdm(range(n_exp)):
+    env = Environment_Bernoulli(rlist=rlist, K=K, random_seed=exp_id)
+    agent = HDoC_Kano(K=K, delta=delta, xi=xi)
+    count_stop = 0
+    output_list = []
+    while not agent.stop:
+        arm = agent.action()
+        reward = env.response(arm)
+        output_arm = agent.observe(reward)
+        if output_arm is not None:
+            output_list.append(output_arm)
+            output_time_[exp_id, count_stop] = agent.t
+            count_stop += 1
+    stop_time_[exp_id] = agent.t
+    if np.any(np.sort(output_list) != np.arange(6, 11)):
+        correctness_[exp_id] = 0
+mean_output_time = np.mean(output_time_, axis=0)
+mean_stop_time = np.mean(stop_time_)
+mean_success = np.mean(correctness_)
+print(f"output time is {mean_output_time}, mean stop time is {mean_stop_time}")
+print(f"mean correctness rate is {mean_success}")
