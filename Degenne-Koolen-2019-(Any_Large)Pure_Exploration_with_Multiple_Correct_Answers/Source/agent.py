@@ -17,6 +17,9 @@ class Sticky_TaT(object):
         self.survive_arms = np.arange(1, K + 1)
         self.pulling_list = [kk for kk in range(1, K + 1)]
 
+        C = 10  # I am not sure C=10 is enough to fulfill the requirement
+        self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
+
         self.stop = False
 
     def action(self):
@@ -33,9 +36,7 @@ class Sticky_TaT(object):
         arm = self.action_[self.t - 1]
         self.total_reward_[arm - 1] += reward
         self.pulling_times_[arm - 1] += 1
-        self.mean_reward_[arm - 1] = (
-            self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
-        )
+        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
         self.t += 1
         pass
 

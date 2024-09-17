@@ -30,14 +30,36 @@ $$
 D(\vec{w},\vec{\mu},\neg i)=w_i \frac{(\mu_i-\mu_0)^2}{2}, D(\mu, \neg i)=\frac{(\mu_i-\mu_0)^2}{2}, \\D(\vec{\mu})=\frac{(\mu_1-\mu_0)^2}{2},i_F(\vec{\mu})=1=\arg\max_{1\leq a\leq K}\mu_a\\
 w^*(\mu,\neg i )=\arg\max_{w} D(\vec{w},\vec{\mu}, \neg i)=e_i
 $$
-In the algorithm, we have
+In the algorithm, if $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$, we have
 $$
-\mathcal{C}_t:=\{\vec{\mu'}: \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\mu_a)^2}{2}\leq \log C +10\log(t-1)\}\\
+\mathcal{C}_t:=\{\vec{\mu'}: \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}\leq \log C +10\log(t-1)\}\\
 I_t=\cup_{\mu'\in\mathcal{C}_t}\{\arg\max_i \mu'_i\}\\
 w_t = e_{i_t}\\
 \mathcal{D}_t:=\{\vec{\mu'}: \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\mu_a)^2}{2}\leq \log(\frac{Ct^2}{\delta})\}\\
 $$
-where $C\geq e\sum_{t=1}^{+\infty}(\frac{e}{K})\frac{(\log^2(Ct^2)\log t)^K}{t^2}$.
+where $C\geq e\sum_{t=1}^{+\infty}(\frac{e}{K})\frac{(\log^2(Ct^2)\log t)^K}{t^2}$. 
+
+### How to determine the elements in $I_t$?
+
+As we use Gaussian Distribution, here we don't consider the case $\hat{\mu}_{a,t}=\mu_0$ for some $a\in[K]$ and $t\in \mathbb{N}$, also we assume all the inequalities strictly hold
+
++ If $\hat{\mu}_{a,t} < \mu_0$ holds for all $a$, then $I_t=[K]$, 
+  and the $w^*(\hat{\mu}_{t-1}, \neg \text{none})$ is determined by $w_a^*=\frac{\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}{\sum_{i=1}^K\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}=\frac{\frac{1}{(\hat{\mu}_{a,t}-\mu_0)^2}}{\sum_{i=1}^K\frac{1}{(\hat{\mu}_{a,t}, \mu_0)^2}}$, and we can see $D(\vec{w},\vec{\mu},\neg \text{none})=\min w_a\frac{(\mu_a-\mu_0)^2}{2}$,  $D(\vec{\mu},\neg \text{none})=\frac{1}{\sum_{a=1}^K\frac{2}{(\mu_a-\mu_0)^2}}$.
+
++ If $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$, without loss of generality, assume $\hat{\mu}_{1,t} \geq \hat{\mu}_{2,t}\geq\cdots \geq \hat{\mu}_{m,t} > \mu_0 > \hat{\mu}_{m+1, t}\geq \cdots\geq \hat{\mu}_{K, t}$, then
+
+  + $1\in i_F(\hat{\mu}_t)\subset I_t$
+
+  + For $2\leq a\leq m$, if $\sum_{i=1}^{a-1}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\hat{\mu}_{a,t})^2}{2}< \log C +10\log(t-1)$, then
+    $a\in i_F(\underbrace{\hat{\mu}_{a,t},\cdots,\hat{\mu}_{a,t}}_{a-1},\hat{\mu}_{a,t}+\Delta,\hat{\mu}_{a+1,t},\cdots,\hat{\mu}_{K,t})\subset I_t$ for some positive $\Delta$,
+
+  + For $m+1\leq a\leq K$, if $\left(\sum_{i=1}^{m}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_0)^2}{2}\right) + N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_0)^2}{2}< \log C +10\log(t-1)$, then
+
+    $a\in i_F(\underbrace{\mu_0,\cdots,\mu_0}_{m},\hat{\mu}_{m+1,t},\cdots,\hat{\mu}_{a-1,t}, \underbrace{\mu_0+\Delta}_{a \text{ th entry} },\hat{\mu}_{a+1,t},\cdots,\hat{\mu}_{K,t})\subset I_t$ for some positive $\Delta$,
+
+  The reason is, if for some $\vec{\mu}'$, $i_F(\vec{\mu'})=a\in \{2,\cdots, K\}$, the above constructed instance vector would be arbitrarily close to the the $\inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}$, by setting small enough $\Delta$.
+
+
 
 ## File Structure
 
