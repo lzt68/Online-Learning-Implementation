@@ -61,5 +61,20 @@ As we use Gaussian Distribution, here we don't consider the case $\hat{\mu}_{a,t
 
 By the sticky pulling rule, denote $I_t=\{a_1, a_2,\cdots, a_{k_t}\}$ with $a_1 < a_2 <\cdots<a_{k_t}$, we always take $i_t=a_1$.
 
-## File Structure
+## Determine whether to stop
+
+The stopping rule in the algorithm is $\exist i\in [K]\cup\{\text{none}\}$, such that $\{\vec{\mu'}: D(N_t,\hat{\mu}_t,\vec{\mu'})\leq \log\frac{Ct^2}{\delta}\} \cap \neg i=\emptyset$.
+
++ For the case $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$, denote $a_0$ as the arm with largest empirical mean reward we stop if
+  $$
+  N_{a_0}(t-1)\frac{(\hat{\mu}_{a_0, t}-\mu_0)^2}{2}\leq\log\frac{Ct^2}{\delta}
+  $$
+
++ For the case $\max_{1\leq a\leq K}\hat{\mu}_{a,t} \leq \mu_0$, we stop if
+  $$
+  N_{a}(t-1)\frac{(\hat{\mu}_{a, t}-\mu_0)^2}{2}\leq\log\frac{Ct^2}{\delta}
+  $$
+   holds for all $a\in[K]$.
+
+# File Structure
 
