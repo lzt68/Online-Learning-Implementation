@@ -58,6 +58,7 @@ As we use Gaussian Distribution, here we don't consider the case $\hat{\mu}_{a,t
     $a\in i_F(\underbrace{\mu_0,\cdots,\mu_0}_{m},\hat{\mu}_{m+1,t},\cdots,\hat{\mu}_{a-1,t}, \underbrace{\mu_0+\Delta}_{a \text{ th entry} },\hat{\mu}_{a+1,t},\cdots,\hat{\mu}_{K,t})\subset I_t$ for some positive $\Delta$,
 
   The reason is, if for some $\vec{\mu}'$, $i_F(\vec{\mu'})=a\in \{2,\cdots, K\}$, the above constructed instance vector would be arbitrarily close to the the $\inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}$, by setting small enough $\Delta$.
+   <font color=red>This statement might be incorrect, we need to rigorously derive the explicit value of $\inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}$.</font>
 
 By the sticky pulling rule, denote $I_t=\{a_1, a_2,\cdots, a_{k_t}\}$ with $a_1 < a_2 <\cdots<a_{k_t}$, we always take $i_t=a_1$.
 
