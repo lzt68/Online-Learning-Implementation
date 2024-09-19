@@ -39,7 +39,7 @@ w_t = e_{i_t}\\
 $$
 where $C\geq e\sum_{t=1}^{+\infty}(\frac{e}{K})\frac{(\log^2(Ct^2)\log t)^K}{t^2}$. 
 
-### How to determine the elements in $I_t$?
+### Determine the elements in $I_t$
 
 As we use Gaussian Distribution, here we don't consider the case $\hat{\mu}_{a,t}=\mu_0$ for some $a\in[K]$ and $t\in \mathbb{N}$, also we assume all the inequalities strictly hold
 
@@ -61,18 +61,29 @@ As we use Gaussian Distribution, here we don't consider the case $\hat{\mu}_{a,t
 
 By the sticky pulling rule, denote $I_t=\{a_1, a_2,\cdots, a_{k_t}\}$ with $a_1 < a_2 <\cdots<a_{k_t}$, we always take $i_t=a_1$.
 
+## Determine $i_t$
+
+By the sticky pulling rule, we would select $i_t$ as the smallest arm index in the $I_t$. As the only usage of $I_t$ is to find out $i_t$ for the next step, there is no need to figure out all the elements in $I_t$. We should iterate arm 1 to $K$ to find out the arm with smallest index that is in $I_t$.
+
+## Determine $\vec{w}_t$
+
++ If $\hat{\mu}_{a,t} < \mu_0$ holds for all $a$, we take $w_a^*=\frac{\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}{\sum_{i=1}^K\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}=\frac{\frac{1}{(\hat{\mu}_{a,t}-\mu_0)^2}}{\sum_{i=1}^K\frac{1}{(\hat{\mu}_{a,t}, \mu_0)^2}}$
++ If $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$
+  + If $i_t\in i^*(\hat{\mu_t})$, we take $\vec{w}_t=e_{i_t}$
+  + If $i_t\notin i^*(\hat{\mu_t})$, $\vec{w}_t$ can be any vector in $\Delta_K$, as $\arg\sup_{\vec{w}\in \Delta_K}\inf_{\vec{\lambda}\in \neg i_t}\sum_{a=1}^K w_a\frac{(\mu_a-\lambda_a)^2}{2}=\arg\sup_{\vec{w}\in \Delta_K}0$. Here we take $\vec{w}_t=(\frac{1}{K},\frac{1}{K},\cdots,\frac{1}{K})$.
+
 ## Determine whether to stop
 
 The stopping rule in the algorithm is $\exist i\in [K]\cup\{\text{none}\}$, such that $\{\vec{\mu'}: D(N_t,\hat{\mu}_t,\vec{\mu'})\leq \log\frac{Ct^2}{\delta}\} \cap \neg i=\emptyset$.
 
 + For the case $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$, denote $a_0$ as the arm with largest empirical mean reward we stop if
   $$
-  N_{a_0}(t-1)\frac{(\hat{\mu}_{a_0, t}-\mu_0)^2}{2}\leq\log\frac{Ct^2}{\delta}
+  N_{a_0}(t-1)\frac{(\hat{\mu}_{a_0, t}-\mu_0)^2}{2} > \log\frac{Ct^2}{\delta}
   $$
 
 + For the case $\max_{1\leq a\leq K}\hat{\mu}_{a,t} \leq \mu_0$, we stop if
   $$
-  N_{a}(t-1)\frac{(\hat{\mu}_{a, t}-\mu_0)^2}{2}\leq\log\frac{Ct^2}{\delta}
+  N_{a}(t-1)\frac{(\hat{\mu}_{a, t}-\mu_0)^2}{2}>\log\frac{Ct^2}{\delta}
   $$
    holds for all $a\in[K]$.
 

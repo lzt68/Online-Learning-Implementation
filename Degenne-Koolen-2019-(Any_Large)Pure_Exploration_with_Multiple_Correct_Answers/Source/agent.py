@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Sticky_TaS(object):
+class Sticky_TaS_old(object):
     # Sticky Track-and-Stop
     def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5) -> None:
         self.delta = delta
@@ -138,23 +138,195 @@ class Sticky_TaS(object):
             return It
 
 
-# unit test 1, test Sticky_TaS
+class Sticky_TaS(object):
+    # Sticky Track-and-Stop
+    def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5) -> None:
+        self.delta = delta
+        self.K = K
+        self.xi = xi
+
+        self.mean_reward_ = np.zeros(K)
+        self.sum_pulling_fraction = np.zeros(K)
+        self.pulling_times_ = np.zeros(K)
+        self.total_reward_ = np.zeros(K)
+        self.action_ = list()
+        self.t = 1
+
+        self.pulling_list = [kk for kk in range(1, K + 1)]
+
+        C = 10  # I am not sure C=10 is enough to fulfill the requirement
+        self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
+        self.function_f = lambda x: np.log(C) + 10 * np.log(x)
+
+        self.stop = False
+
+    def action(self):
+        assert not self.stop, "the algorithm stops"
+        assert len(self.pulling_list) > 0, "pulling list is empty"
+
+        arm = self.pulling_list.pop(0)
+        self.action_.append(arm)
+        return arm
+
+    def observe(self, reward):
+        assert not self.stop, "the algorithm stops"
+        arm = self.action_[self.t - 1]
+        self.total_reward_[arm - 1] += reward
+        self.pulling_times_[arm - 1] += 1
+        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
+        self.t += 1
+
+        # calculate the arm to be pulled in the next round
+        if len(self.pulling_list) == 0:
+            # It = self.Get_It(self.mean_reward_, self.pulling_times_)
+            # it = It[0]
+            # wt = self.Get_wt(self.mean_reward_, it=it)
+            wt = self.Get_wt(self.mean_reward_, self.pulling_times_)
+            ## C-Track
+            epsilon = 1 / np.sqrt(self.K**2 + self.t)
+            projected_w = self.get_projection(wt, epsilon)
+            self.sum_pulling_fraction = self.sum_pulling_fraction + projected_w
+            arm = np.argmax(self.sum_pulling_fraction - self.pulling_times_) + 1
+            self.pulling_list.append(arm)
+
+        # determine whether to stop
+        max_mean = np.max(self.mean_reward_)
+        if max_mean > self.xi:
+            a0 = np.argmax(self.mean_reward_) + 1
+            beta_t = self.beta(self.t - 1)
+            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+            if beta_t < condition:
+                self.stop = True
+                return a0
+        else:
+            for arm in np.arange(1, self.K + 1):
+                beta_t = self.beta(self.t - 1)
+                condition = self.pulling_times_[arm - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+                if condition <= beta_t:
+                    # that means we can find an instance that is in both $\neg i$
+                    # and $\mathcal{D}_t$
+                    return None
+            self.stop = True
+            return "No Arms Above xi"
+
+    def if_stop(self):
+        return self.stop
+
+    def get_projection(self, w, epsilon):
+        # project the w into the $[\epsilon, 1]^K \cap \Sigma_K$, through solving linear optimization problem
+        # Please check README.md to see why the following codes can find the projection
+        projected_w = np.zeros(self.K)
+        threshold_index = w < epsilon
+        projected_w[threshold_index] = epsilon
+
+        gap = np.sum(np.maximum(epsilon - w, 0))
+        projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
+
+        return projected_w
+
+    def Get_wt(self, hatmu, pulling):
+        max_mean = np.max(hatmu)
+        if max_mean < self.xi:
+            wt = 2 / (hatmu - self.xi) ** 2
+            wt = wt / np.sum(wt)
+            return wt
+        else:  # max_mean \geq self.xi
+            it = self.Get_it(hatmu, pulling)
+            if hatmu[it - 1] > self.xi:
+                wt = np.zeros(self.K)
+                wt[it - 1] = 1
+                return wt
+            else:
+                wt = np.ones(self.K) / self.K
+                return wt
+
+    def Get_it(self, hatmu, pulling):
+        ft = self.function_f(self.t - 1)
+        for arm in range(1, self.K + 1):
+            if hatmu[arm - 1] > self.xi:
+                mu_temp = hatmu.copy()
+                mu_temp[hatmu > hatmu[arm - 1]] = hatmu[arm - 1]
+                condition = np.sum(pulling * (mu_temp - hatmu) ** 2 / 2)
+                if condition < ft:
+                    return arm
+            else:
+                mu_temp = hatmu.copy()
+                mu_temp[hatmu > self.xi] = self.xi
+                mu_temp[arm - 1] = self.xi
+                condition = np.sum(pulling * (mu_temp - hatmu) ** 2 / 2)
+                if condition < ft:
+                    return arm
+
+
+# %% unit test 1, test Sticky_TaS
+# from env import Environment_Gaussian
+
+# rlist = [0.1, 0.2, 0.0, 0.6]
+# K = len(rlist)
+# xi = 0.5
+# delta = 0.001
+
+# env = Environment_Gaussian(rlist=rlist, K=K, random_seed=12345)
+# # agent = Sticky_TaS(K=K, delta=delta, xi=xi)
+# agent = Sticky_TaS_old(K=K, delta=delta, xi=xi)
+# output_arm = None
+# stop_time = 0
+# while not agent.stop:
+#     arm = agent.action()
+#     reward = env.response(arm)
+#     output_arm = agent.observe(reward)
+#     if output_arm is not None:
+#         predicted_arm = output_arm
+#         stop_time = agent.t
+# print(f"output arm is {output_arm}, output time is {stop_time}")
+
+# %% unit test 2, compare the running speed of Sticky_TaS and Sticky_TaS_old
 from env import Environment_Gaussian
+from tqdm import tqdm
+from time import time
 
-rlist = [0.1, 0.2, 0.0, 0.6]
-K = len(rlist)
+K = 21
 xi = 0.5
-delta = 0.001
+Delta = 0.01
+rlist = np.ones(K) * xi
+rlist[1 : (K + 1) // 2] = xi + Delta
+rlist[(K + 1) // 2 : K] = xi - Delta
+rlist[0] = 1.0
+delta = 0.01
+n_exp = 5
 
-env = Environment_Gaussian(rlist=rlist, K=K, random_seed=12345)
-agent = Sticky_TaS(K=K, delta=delta, xi=xi)
-output_arm = None
-stop_time = 0
-while not agent.stop:
-    arm = agent.action()
-    reward = env.response(arm)
-    output_arm = agent.observe(reward)
-    if output_arm is not None:
-        predicted_arm = output_arm
-        stop_time = agent.t
-print(f"output arm is {output_arm}, output time is {stop_time}")
+stop_time_ = np.zeros(n_exp)
+output_arm_ = list()
+correctness_ = np.ones(n_exp)
+exectution_time_ = np.zeros(n_exp)
+for alg_class in [Sticky_TaS_old, Sticky_TaS]:
+    for exp_id in tqdm(range(n_exp)):
+        rlist_temp = rlist.copy()
+        np.random.seed(exp_id)
+        np.random.shuffle(rlist_temp)
+        answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+
+        env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=exp_id)
+        agent = alg_class(K=K, delta=delta, xi=xi)
+
+        time_start = time()
+        while not agent.stop:
+            arm = agent.action()
+            reward = env.response(arm)
+            output_arm = agent.observe(reward)
+            if output_arm is not None:
+                output_arm_.append(output_arm)
+                break
+        time_end = time()
+        stop_time_[exp_id] = agent.t
+        exectution_time_[exp_id] = time_end - time_start
+        if output_arm not in answer_set:
+            correctness_[exp_id] = 0
+    mean_stop_time = np.mean(stop_time_)
+    mean_success = np.mean(correctness_)
+    mean_execution_time = np.mean(exectution_time_)
+    algname = type(agent).__name__
+    print(f"For algorithm {algname}, ")
+    print(f"mean stop time is {mean_stop_time}")
+    print(f"correctness rate is {mean_success}")
+    print(f"execution time is {mean_execution_time}")
