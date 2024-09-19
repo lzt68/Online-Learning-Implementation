@@ -281,52 +281,55 @@ class Sticky_TaS(object):
 # print(f"output arm is {output_arm}, output time is {stop_time}")
 
 # %% unit test 2, compare the running speed of Sticky_TaS and Sticky_TaS_old
-from env import Environment_Gaussian
-from tqdm import tqdm
-from time import time
+# from env import Environment_Gaussian
+# from tqdm import tqdm
+# from time import time
 
-K = 21
-xi = 0.5
-Delta = 0.01
-rlist = np.ones(K) * xi
-rlist[1 : (K + 1) // 2] = xi + Delta
-rlist[(K + 1) // 2 : K] = xi - Delta
-rlist[0] = 1.0
-delta = 0.01
-n_exp = 5
+# K = 21
+# xi = 0.5
+# Delta = 0.01
+# rlist = np.ones(K) * xi
+# rlist[1 : (K + 1) // 2] = xi + Delta
+# rlist[(K + 1) // 2 : K] = xi - Delta
+# rlist[0] = 1.0
+# delta = 0.01
+# n_exp = 100
 
-stop_time_ = np.zeros(n_exp)
-output_arm_ = list()
-correctness_ = np.ones(n_exp)
-exectution_time_ = np.zeros(n_exp)
-for alg_class in [Sticky_TaS_old, Sticky_TaS]:
-    for exp_id in tqdm(range(n_exp)):
-        rlist_temp = rlist.copy()
-        np.random.seed(exp_id)
-        np.random.shuffle(rlist_temp)
-        answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+# stop_time_ = np.zeros(n_exp)
+# output_arm_ = list()
+# correctness_ = np.ones(n_exp)
+# exectution_time_ = np.zeros(n_exp)
+# for alg_class in [Sticky_TaS_old, Sticky_TaS]:
+#     for exp_id in tqdm(range(n_exp)):
+#         rlist_temp = rlist.copy()
+#         np.random.seed(exp_id)
+#         np.random.shuffle(rlist_temp)
+#         answer_set = list(np.where(rlist_temp > xi)[0] + 1)
 
-        env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=exp_id)
-        agent = alg_class(K=K, delta=delta, xi=xi)
+#         env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=exp_id)
+#         agent = alg_class(K=K, delta=delta, xi=xi)
 
-        time_start = time()
-        while not agent.stop:
-            arm = agent.action()
-            reward = env.response(arm)
-            output_arm = agent.observe(reward)
-            if output_arm is not None:
-                output_arm_.append(output_arm)
-                break
-        time_end = time()
-        stop_time_[exp_id] = agent.t
-        exectution_time_[exp_id] = time_end - time_start
-        if output_arm not in answer_set:
-            correctness_[exp_id] = 0
-    mean_stop_time = np.mean(stop_time_)
-    mean_success = np.mean(correctness_)
-    mean_execution_time = np.mean(exectution_time_)
-    algname = type(agent).__name__
-    print(f"For algorithm {algname}, ")
-    print(f"mean stop time is {mean_stop_time}")
-    print(f"correctness rate is {mean_success}")
-    print(f"execution time is {mean_execution_time}")
+#         time_start = time()
+#         while not agent.stop:
+#             arm = agent.action()
+#             reward = env.response(arm)
+#             output_arm = agent.observe(reward)
+#             if output_arm is not None:
+#                 output_arm_.append(output_arm)
+#                 break
+#         time_end = time()
+#         stop_time_[exp_id] = agent.t
+#         exectution_time_[exp_id] = time_end - time_start
+#         if output_arm not in answer_set:
+#             correctness_[exp_id] = 0
+#     mean_stop_time = np.mean(stop_time_)
+#     mean_success = np.mean(correctness_)
+#     mean_execution_time = np.mean(exectution_time_)
+#     algname = type(agent).__name__
+#     print(f"For algorithm {algname}, ")
+#     print(f"mean stop time is {mean_stop_time}")
+#     print(f"correctness rate is {mean_success}")
+#     print(f"execution time is {mean_execution_time}")
+
+# %% unit test 3, how would the permutaion of arms affect the pulling complexity?
+# uncompleted
