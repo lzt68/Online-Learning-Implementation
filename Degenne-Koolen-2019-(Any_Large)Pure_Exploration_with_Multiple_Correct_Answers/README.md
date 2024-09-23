@@ -39,7 +39,16 @@ w_t = e_{i_t}\\
 $$
 where $C\geq e\sum_{t=1}^{+\infty}(\frac{e}{K})\frac{(\log^2(Ct^2)\log t)^K}{t^2}$. 
 
-### Determine the elements in $I_t$
+## Calculation of  $i_F(\vec{\mu})$
+
+From the example 1 in the page 3, we know
+
++ If $\max_{1\leq a\leq K} \mu_a > \mu_0$, then $i_F(\vec{\mu})=\arg\max_a \mu_a$
++ If $\max_{1\leq a\leq K} \mu_a \leq \mu_0$, for any arm $i\in [K]$, $\vec{\mu}\in \neg i$, thus $\inf_{\vec{\lambda}\in \neg i}\sum_{a=1}^K w_a\frac{(\mu_a-\lambda_a)^2}{2}=0$ holds for any $i\in [K]$.
+  And $i_F(\vec{\mu})=\arg\max_a \sup_{\vec{w}_k\in \Delta_K} 0 =[K]$.
+  Thus, $i_F(\vec{\mu})=[K]$.
+
+### Determine the elements in $I_t$ Old
 
 As we use Gaussian Distribution, here we don't consider the case $\hat{\mu}_{a,t}=\mu_0$ for some $a\in[K]$ and $t\in \mathbb{N}$, also we assume all the inequalities strictly hold
 
@@ -76,6 +85,35 @@ Derive the explicit value of $\inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{i=1}^K 
 
 
 By the sticky pulling rule, denote $I_t=\{a_1, a_2,\cdots, a_{k_t}\}$ with $a_1 < a_2 <\cdots<a_{k_t}$, we always take $i_t=a_1$.
+
+
+
+## Judge whether an arm $a$ is in $I_t$
+
++ If $\hat{\mu}_{i,t} < \mu_0$ holds for all $i$, then $I_t=[K]$, further $a\in I_t$.
++ If $\sum_{i=1}^KN_i(t-1)\frac{(\hat{\mu}_{i,t}-\min\{\mu_0, \hat{\mu}_{i,t}\})^2}{2} < \log f(t-1)$, then vector $\vec{\mu}'$ whose $a$-th entry is $\mu_a' = \min\{\hat{\mu}_{i,t},\mu_0\}$ is in $\mathcal{C}_t:=\left\{\vec{\mu'}: \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}\leq \log f(t-1)\right\}$. 
+  Since $i_F(\vec{\mu}')=[K]$, we can conclude $I_t=[K]$.
+
+Or we can consider finding a vector $\vec{\mu'}\in S_a:=\left\{\vec{\mu}: a=\arg\max_{1\leq i\leq K}\mu_i, \mu_a > \mu_0\right\}$. If $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2} < \log f(t-1)$, we can conclude $a\in I_t$. Then the problem reduce to the calculation of $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}$. Notice that
+$$
+\begin{align*}
+& \inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}\\
+= & \inf_{\mu_a'\geq \mu_0}\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}
+\end{align*}
+$$
+We can firstly solve the sub-problem $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=N_a(t-1)\frac{(\mu_a'-\hat{\mu}_{a,t})^2}{2} + \sum_{i=1, i\neq a}^K\inf_{\mu_i' \leq \mu_a'}N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}$, given the choice of $\mu_a'$. 
+
++ For arm index $j$ whose $\hat{\mu}_{j,t} < \mu_a'$, we know the optimal value must be $\mu_j'^*=\hat{\mu}_{j,t}$.
+
+  > By the fact that $\inf_{\mu_j' \leq \mu_a'}N_j(t-1)\frac{(\mu'_j-\hat{\mu}_{j,t})^2}{2}\stackrel{\text{take }\mu_j'=\hat{\mu}_{j,t}}{\geq} 0$.
+
++ For arm index $j$ whose $\hat{\mu}_{j,t} \geq \mu_a'$, we know the optimal value must be $\mu_j'^*=\mu_a'$.
+
+  > By the fact that $\inf_{\mu_j' \leq \mu_a'}N_j(t-1)\frac{(\mu'_j-\hat{\mu}_{j,t})^2}{2}\geq N_j(t-1)\frac{(\mu'_a-\hat{\mu}_{j,t})^2}{2}$.
+
+Thus, we get $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=\sum_{i: \hat{\mu}_{i,t} > \mu_a'}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}$
+
+
 
 ## Determine $i_t$
 
