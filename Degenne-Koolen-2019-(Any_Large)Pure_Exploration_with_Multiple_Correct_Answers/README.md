@@ -48,53 +48,14 @@ From the example 1 in the page 3, we know
   And $i_F(\vec{\mu})=\arg\max_a \sup_{\vec{w}_k\in \Delta_K} 0 =[K]$.
   Thus, $i_F(\vec{\mu})=[K]$.
 
-### Determine the elements in $I_t$ Old
-
-As we use Gaussian Distribution, here we don't consider the case $\hat{\mu}_{a,t}=\mu_0$ for some $a\in[K]$ and $t\in \mathbb{N}$, also we assume all the inequalities strictly hold
-
-+ If $\hat{\mu}_{a,t} < \mu_0$ holds for all $a$, then $I_t=[K]$, 
-  and the $w^*(\hat{\mu}_{t-1}, \neg \text{none})$ is determined by $w_a^*=\frac{\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}{\sum_{i=1}^K\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}=\frac{\frac{1}{(\hat{\mu}_{a,t}-\mu_0)^2}}{\sum_{i=1}^K\frac{1}{(\hat{\mu}_{a,t}, \mu_0)^2}}$, and we can see $D(\vec{w},\vec{\mu},\neg \text{none})=\min w_a\frac{(\mu_a-\mu_0)^2}{2}$,  $D(\vec{\mu},\neg \text{none})=\frac{1}{\sum_{a=1}^K\frac{2}{(\mu_a-\mu_0)^2}}$.
-
-+ If $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$, without loss of generality, assume $\hat{\mu}_{1,t} \geq \hat{\mu}_{2,t}\geq\cdots \geq \hat{\mu}_{m,t} > \mu_0 > \hat{\mu}_{m+1, t}\geq \cdots\geq \hat{\mu}_{K, t}$, then
-
-  + $1\in i_F(\hat{\mu}_t)\subset I_t$
-
-  + For $2\leq a\leq m$, if $\sum_{i=1}^{a-1}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\hat{\mu}_{a,t})^2}{2}< \log C +10\log(t-1)$, then
-    $a\in i_F(\underbrace{\hat{\mu}_{a,t},\cdots,\hat{\mu}_{a,t}}_{a-1},\hat{\mu}_{a,t}+\Delta,\hat{\mu}_{a+1,t},\cdots,\hat{\mu}_{K,t})\subset I_t$ for some positive $\Delta$,
-
-  + For $m+1\leq a\leq K$, if $\left(\sum_{i=1}^{m}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_0)^2}{2}\right) + N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_0)^2}{2}< \log C +10\log(t-1)$, then
-
-    $a\in i_F(\underbrace{\mu_0,\cdots,\mu_0}_{m},\hat{\mu}_{m+1,t},\cdots,\hat{\mu}_{a-1,t}, \underbrace{\mu_0+\Delta}_{a \text{ th entry} },\hat{\mu}_{a+1,t},\cdots,\hat{\mu}_{K,t})\subset I_t$ for some positive $\Delta$,
-
-  The reason is, if for some $\vec{\mu}'$, $i_F(\vec{\mu'})=a\in \{2,\cdots, K\}$, the above constructed instance vector would be arbitrarily close to the the $\inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}$, by setting small enough $\Delta$.
-   <font color=red>This statement might be incorrect, we need to rigorously derive the explicit value of $\inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}$.</font>
-
-Derive the explicit value of $\inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}$ for an arm $a\in [m]$​.
-
-> $$
-> \begin{align*}
-> & \inf_{\vec{\mu'}: i_F(\vec{\mu'})=a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}\\
-> = & \inf_{\vec{\mu'}: \mu_a'\geq \max\limits_{1\leq i\leq K}\mu_i'} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}\\
-> = & \inf_{\mu_a'\geq \mu_0}\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}\\
-> \end{align*}
-> $$
->
-> Firstly consider for any given $\mu_a'$, the optimal value and solution of $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}$​.
-> For arm $i$ whose $\hat{\mu}_{i,t}\leq \mu_a'$,
-
-
-
-By the sticky pulling rule, denote $I_t=\{a_1, a_2,\cdots, a_{k_t}\}$ with $a_1 < a_2 <\cdots<a_{k_t}$, we always take $i_t=a_1$.
-
-
-
 ## Judge whether an arm $a$ is in $I_t$
 
 + If $\hat{\mu}_{i,t} < \mu_0$ holds for all $i$, then $I_t=[K]$, further $a\in I_t$.
 + If $\sum_{i=1}^KN_i(t-1)\frac{(\hat{\mu}_{i,t}-\min\{\mu_0, \hat{\mu}_{i,t}\})^2}{2} < \log f(t-1)$, then vector $\vec{\mu}'$ whose $a$-th entry is $\mu_a' = \min\{\hat{\mu}_{i,t},\mu_0\}$ is in $\mathcal{C}_t:=\left\{\vec{\mu'}: \sum_{a=1}^K N_a(t-1)\frac{(\mu'_a-\hat{\mu}_{a,t})^2}{2}\leq \log f(t-1)\right\}$. 
-  Since $i_F(\vec{\mu}')=[K]$, we can conclude $I_t=[K]$.
+  Since $i_F(\vec{\mu}')=[K]$, we can conclude $I_t=[K]$​.
++ If $a=\arg\max_{1\leq i\leq K} \hat{\mu}_{i,t}$, then $a\in I_t$.
 
-Or we can consider finding a vector $\vec{\mu'}\in S_a:=\left\{\vec{\mu}: a=\arg\max_{1\leq i\leq K}\mu_i, \mu_a > \mu_0\right\}$. If $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2} < \log f(t-1)$, we can conclude $a\in I_t$. Then the problem reduce to the calculation of $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}$. Notice that
+For an arm $a$ which is not the arm with maximum empirical mean reward, we can consider finding a vector $\vec{\mu'}\in S_a:=\left\{\vec{\mu}: a=\arg\max_{1\leq i\leq K}\mu_i, \mu_a > \mu_0\right\}$. If $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2} < \log f(t-1)$, we can conclude $a\in I_t$. Then the problem reduce to the calculation of $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}$. Notice that
 $$
 \begin{align*}
 & \inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}\\
@@ -111,9 +72,14 @@ We can firstly solve the sub-problem $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} 
 
   > By the fact that $\inf_{\mu_j' \leq \mu_a'}N_j(t-1)\frac{(\mu'_j-\hat{\mu}_{j,t})^2}{2}\geq N_j(t-1)\frac{(\mu'_a-\hat{\mu}_{j,t})^2}{2}$.
 
-Thus, we get $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=\sum_{i: \hat{\mu}_{i,t} > \mu_a'}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}$
+Thus, we get $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i\neq a}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$​. 
 
+To solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i\neq a}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$, we can see
 
++ If $\hat{\mu}_{a,t}\geq \mu_0$, we can conclude the optimal $\mu_a'$ must lie in the interval $(\hat{\mu}_{a,t}, \max_{1\leq i\leq K}\hat{\mu}_{i,t})$. Then we only need to solve $\min_{\mu_a' \geq \hat{\mu}_{a,t}}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$.
++ If $\hat{\mu}_{a,t} <  \mu_0$, we can conclude the optimal $\mu_a'$ must lie in the interval $(\mu_0, \max_{1\leq i\leq K}\hat{\mu}_{i,t})$. Then we only need to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \mu_0}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$
+
+**It seems very hard to derive an explicit minimum point of the function.** But easy to see this is a convex function regarding $\mu_a'$, then we can use binary search to approximate the minimum point.
 
 ## Determine $i_t$
 
