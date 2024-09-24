@@ -1,6 +1,30 @@
 import numpy as np
 
 
+def gss(f, a, b, threshold, ftoloerance=1e-3):
+    # use golden section search to judege whether function f's minimum point is below threshold
+    if f(a) <= threshold or f(b) <= threshold:
+        return True
+
+    invphi = (np.sqrt(5) - 1) / 2  # 1 / phi
+    while True:
+        c = b - (b - a) * invphi
+        d = a + (b - a) * invphi
+        fc = f(c)
+        fd = f(d)
+
+        if fc <= threshold or fd <= threshold:
+            return True
+
+        if np.abs(fc - fd) < ftoloerance:
+            return False
+
+        if fc < fd:
+            b = d
+        else:
+            a = c
+
+
 class Sticky_TaS_old(object):
     # Sticky Track-and-Stop
     def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5) -> None:
@@ -41,9 +65,10 @@ class Sticky_TaS_old(object):
 
         # calculate the arm to be pulled in the next round
         if len(self.pulling_list) == 0:
-            It = self.Get_It(self.mean_reward_, self.pulling_times_)
-            it = It[0]
-            wt = self.Get_wt(self.mean_reward_, it=it)
+            # It = self.Get_It(self.mean_reward_, self.pulling_times_)
+            # it = It[0]
+            # wt = self.Get_wt(self.mean_reward_, it=it)
+            wt = self.Get_wt(self.mean_reward_, self.pulling_times_)
             ## C-Track
             epsilon = 1 / np.sqrt(self.K**2 + self.t)
             projected_w = self.get_projection(wt, epsilon)
@@ -86,56 +111,58 @@ class Sticky_TaS_old(object):
 
         return projected_w
 
-    def Get_wt(self, hatmu, it):
+    def Get_wt(self, hatmu, pulling):
         max_mean = np.max(hatmu)
         if max_mean < self.xi:
             wt = 2 / (hatmu - self.xi) ** 2
             wt = wt / np.sum(wt)
             return wt
-        else:
-            # as we use sticky rule, $i_t\in i_F(\hat{\mu})$ might not hold
+        else:  # max_mean \geq self.xi
+            It = self.Get_It(hatmu, pulling)
+            it = It[0]
             if hatmu[it - 1] > self.xi:
                 wt = np.zeros(self.K)
                 wt[it - 1] = 1
                 return wt
             else:
-                # if $i_t\notin i_F(\hat{\mu})$,
-                # then $D(\vec{\mu}, \neg i)=0$, and we take any pulling fraction w
-                # here we take uniformly pulling fraction
                 wt = np.ones(self.K) / self.K
                 return wt
 
-    def Get_It(self, hatmu: np.ndarray, pulling_times: np.ndarray):
-        max_mean = np.max(hatmu)
-        if max_mean < self.xi:
-            It = np.arange(1, self.K + 1)
-            return It
-        else:
-            It = []
-            arm_above_xi = list(np.where(hatmu >= self.xi)[0] + 1)
-            arm_below_xi = list(np.where(hatmu < self.xi)[0] + 1)
-            for arm in arm_above_xi:
-                if hatmu[arm - 1] == max_mean:
-                    It.append(arm)
-                    continue
-                else:
-                    mu_temp = hatmu.copy()
-                    mu_temp[hatmu > hatmu[arm - 1]] = hatmu[arm - 1]
-                    condition = np.sum(pulling_times * (mu_temp - hatmu) ** 2 / 2)
-                    ft = self.function_f(self.t - 1)
-                    if condition < ft:
-                        It.append(arm)
+    def Get_It(self, hatmu: np.ndarray, pulling: np.ndarray):
+        best_emp_arm = np.argmax(hatmu) + 1
+        best_emp = hatmu[best_emp_arm - 1]
+        if best_emp < self.xi:
+            # $\max_a \hat{\mu}_{a,t} < xi$
+            return np.arange(1, self.K + 1)
 
-            for arm in arm_below_xi:
-                mu_temp = hatmu.copy()
-                mu_temp[hatmu > self.xi] = self.xi
-                mu_temp[arm - 1] = self.xi
-                condition = np.sum(pulling_times * (mu_temp - hatmu) ** 2 / 2)
-                ft = self.function_f(self.t - 1)
-                if condition < ft:
+        ft = self.function_f(self.t - 1)
+        mu_temp = hatmu.copy()
+        mu_temp[hatmu > self.xi] = self.xi
+        condition = np.sum(pulling * (mu_temp - hatmu) ** 2 / 2)
+        if condition < ft:
+            return np.arange(1, self.K + 1)
+
+        It = list()
+        for arm in range(1, self.K + 1):
+            if hatmu[arm - 1] > self.xi:
+                hat_mu_arm_t = hatmu[arm - 1]
+                N_arm_t = pulling[arm - 1]
+                index_arm = hatmu > hat_mu_arm_t
+                mu_temp = hatmu[index_arm]
+                Nt = pulling[index_arm]
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+                if gss(f, hatmu[arm - 1], best_emp, ft):
                     It.append(arm)
-            It.sort()
-            return It
+            else:
+                hat_mu_arm_t = hatmu[arm - 1]
+                N_arm_t = pulling[arm - 1]
+                index_better_than_arm = hatmu > self.xi
+                mu_temp = hatmu[index_better_than_arm]
+                Nt = pulling[index_better_than_arm]
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+                if gss(f, self.xi, best_emp, ft):
+                    It.append(arm)
+        return It
 
 
 class Sticky_TaS(object):
@@ -240,22 +267,46 @@ class Sticky_TaS(object):
                 wt = np.ones(self.K) / self.K
                 return wt
 
-    def Get_it(self, hatmu, pulling):
+    def Get_it(self, hatmu: np.ndarray, pulling: np.ndarray):
+        best_emp_arm = np.argmax(hatmu) + 1
+        best_emp = hatmu[best_emp_arm - 1]
+        if best_emp < self.xi:
+            # $\max_a \hat{\mu}_{a,t} < xi$
+            return 1
+
         ft = self.function_f(self.t - 1)
-        for arm in range(1, self.K + 1):
+        mu_temp = hatmu.copy()
+        mu_temp[hatmu > self.xi] = self.xi
+        condition = np.sum(pulling * (mu_temp - hatmu) ** 2 / 2)
+        if condition < ft:
+            return 1
+
+        for arm in range(1, best_emp_arm):
             if hatmu[arm - 1] > self.xi:
-                mu_temp = hatmu.copy()
-                mu_temp[hatmu > hatmu[arm - 1]] = hatmu[arm - 1]
-                condition = np.sum(pulling * (mu_temp - hatmu) ** 2 / 2)
-                if condition < ft:
+                hat_mu_arm_t = hatmu[arm - 1]
+                N_arm_t = pulling[arm - 1]
+                index_arm = hatmu > hat_mu_arm_t
+                mu_temp = hatmu[index_arm]
+                Nt = pulling[index_arm]
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+
+                if gss(f, hatmu[arm - 1], best_emp, ft):
                     return arm
             else:
-                mu_temp = hatmu.copy()
-                mu_temp[hatmu > self.xi] = self.xi
-                mu_temp[arm - 1] = self.xi
-                condition = np.sum(pulling * (mu_temp - hatmu) ** 2 / 2)
-                if condition < ft:
+                hat_mu_arm_t = hatmu[arm - 1]
+                N_arm_t = pulling[arm - 1]
+                index_better_than_arm = hatmu > self.xi
+                mu_temp = hatmu[index_better_than_arm]
+                Nt = pulling[index_better_than_arm]
+
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+
+                if gss(f, self.xi, best_emp, ft):
                     return arm
+
+        # if the algorithm doesn't return any value
+        # then best_emp_arm is the minimum arm index that's in I_t
+        return best_emp_arm
 
 
 # %% unit test 1, test Sticky_TaS
@@ -267,8 +318,8 @@ class Sticky_TaS(object):
 # delta = 0.001
 
 # env = Environment_Gaussian(rlist=rlist, K=K, random_seed=12345)
-# # agent = Sticky_TaS(K=K, delta=delta, xi=xi)
 # agent = Sticky_TaS_old(K=K, delta=delta, xi=xi)
+# # agent = Sticky_TaS(K=K, delta=delta, xi=xi)
 # output_arm = None
 # stop_time = 0
 # while not agent.stop:
@@ -285,7 +336,7 @@ class Sticky_TaS(object):
 # from tqdm import tqdm
 # from time import time
 
-# K = 21
+# K = 1000
 # xi = 0.5
 # Delta = 0.01
 # rlist = np.ones(K) * xi
@@ -295,11 +346,12 @@ class Sticky_TaS(object):
 # delta = 0.01
 # n_exp = 100
 
-# stop_time_ = np.zeros(n_exp)
-# output_arm_ = list()
-# correctness_ = np.ones(n_exp)
-# exectution_time_ = np.zeros(n_exp)
+
 # for alg_class in [Sticky_TaS_old, Sticky_TaS]:
+#     stop_time_ = np.zeros(n_exp)
+#     output_arm_ = list()
+#     correctness_ = np.ones(n_exp)
+#     exectution_time_ = np.zeros(n_exp)
 #     for exp_id in tqdm(range(n_exp)):
 #         rlist_temp = rlist.copy()
 #         np.random.seed(exp_id)
@@ -330,6 +382,100 @@ class Sticky_TaS(object):
 #     print(f"mean stop time is {mean_stop_time}")
 #     print(f"correctness rate is {mean_success}")
 #     print(f"execution time is {mean_execution_time}")
+# """ output
+# For algorithm Sticky_TaS_old,
+# mean stop time is 255423.87
+# correctness rate is 1.0
+# execution time is 24.250074293613434
+
+# For algorithm Sticky_TaS,
+# mean stop time is 255423.87
+# correctness rate is 1.0
+# execution time is 22.604291009902955
+# """
 
 # %% unit test 3, how would the permutaion of arms affect the pulling complexity?
-# uncompleted
+# the gap can be 10 times larger
+# from env import Environment_Gaussian
+# from tqdm import tqdm
+# from time import time
+
+# K = 100
+# xi = 0.5
+# Delta = 0.01
+# rlist = np.ones(K) * xi
+# rlist[1 : (K + 1) // 2] = xi + Delta
+# rlist[(K + 1) // 2 : K] = xi - Delta
+# rlist[0] = 1.0
+# delta = 0.01
+# n_exp = 100
+
+
+# for alg_class in [Sticky_TaS]:
+#     stop_time_ = np.zeros(n_exp)
+#     output_arm_ = list()
+#     correctness_ = np.ones(n_exp)
+#     exectution_time_ = np.zeros(n_exp)
+#     for exp_id in tqdm(range(n_exp)):
+#         rlist_temp = rlist.copy()
+#         answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+
+#         env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=exp_id)
+#         agent = alg_class(K=K, delta=delta, xi=xi)
+
+#         time_start = time()
+#         while not agent.stop:
+#             arm = agent.action()
+#             reward = env.response(arm)
+#             output_arm = agent.observe(reward)
+#             if output_arm is not None:
+#                 output_arm_.append(output_arm)
+#                 break
+#         time_end = time()
+#         stop_time_[exp_id] = agent.t
+#         exectution_time_[exp_id] = time_end - time_start
+#         if output_arm not in answer_set:
+#             correctness_[exp_id] = 0
+#     mean_stop_time = np.mean(stop_time_)
+#     mean_success = np.mean(correctness_)
+#     mean_execution_time = np.mean(exectution_time_)
+#     algname = type(agent).__name__
+#     print(f"For algorithm {algname}, ")
+#     print(f"mean stop time is {mean_stop_time}")
+#     print(f"correctness rate is {mean_success}")
+#     print(f"execution time is {mean_execution_time}")
+
+# # reverse the order of rlist
+# for alg_class in [Sticky_TaS]:
+#     stop_time_ = np.zeros(n_exp)
+#     output_arm_ = list()
+#     correctness_ = np.ones(n_exp)
+#     exectution_time_ = np.zeros(n_exp)
+#     for exp_id in tqdm(range(n_exp)):
+#         rlist_temp = rlist[::-1].copy()
+#         answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+
+#         env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=exp_id)
+#         agent = alg_class(K=K, delta=delta, xi=xi)
+
+#         time_start = time()
+#         while not agent.stop:
+#             arm = agent.action()
+#             reward = env.response(arm)
+#             output_arm = agent.observe(reward)
+#             if output_arm is not None:
+#                 output_arm_.append(output_arm)
+#                 break
+#         time_end = time()
+#         stop_time_[exp_id] = agent.t
+#         exectution_time_[exp_id] = time_end - time_start
+#         if output_arm not in answer_set:
+#             correctness_[exp_id] = 0
+#     mean_stop_time = np.mean(stop_time_)
+#     mean_success = np.mean(correctness_)
+#     mean_execution_time = np.mean(exectution_time_)
+#     algname = type(agent).__name__
+#     print(f"For algorithm {algname}, ")
+#     print(f"mean stop time is {mean_stop_time}")
+#     print(f"correctness rate is {mean_success}")
+#     print(f"execution time is {mean_execution_time}")
