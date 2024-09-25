@@ -1,3 +1,17 @@
+# %% usage of argsort
+import numpy as np
+
+np.random.seed(12345)
+
+a = np.random.randint(low=0, high=100, size=5)
+index = np.argsort(a=a)[::-1]
+inverse_permutation = np.argsort(index) + 1
+print(a)
+print(index)
+print(inverse_permutation)
+print(a[index])
+
+# %% abandoned code
 # def Get_wt_old(self, hatmu, it):
 #     max_mean = np.max(hatmu)
 #     if max_mean < self.xi:

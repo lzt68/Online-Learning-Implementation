@@ -11,9 +11,11 @@ For convenience, here we consider **Any Large Problem**, which is essentially th
 
 We want to design an algorithm which take confidence level $\delta$ as input, such that for any instance $\nu$, the algorithm can achieve success with probability $1-\delta$, while consuming as small pulling times as possible.
 
-We only work on instances whose maximum mean reward is not $\mu_0$​, and unit variance Gaussian Distribution
+We only work on instances whose maximum mean reward is not $\mu_0$​, and unit variance Gaussian Distribution.
 
-## Calculation - Simplification
+# Supplement Details for the Algorithm
+
+## Simplification of the notations
 
 As we only consider unit variance Gaussian Distribution, for any mean reward vectors $\vec{\mu},\vec{\lambda}$ and pulling times vector $\vec{w}$, we have
 $$
@@ -84,6 +86,20 @@ To solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} +
 ## Determine $i_t$
 
 By the sticky pulling rule, we would select $i_t$ as the smallest arm index in the $I_t$. As the only usage of $I_t$ is to find out $i_t$ for the next step, there is no need to figure out all the elements in $I_t$. We should iterate arm 1 to $K$ to find out the arm with smallest index that is in $I_t$.
+
+## Specify the value of Constant $C$
+In the Theorem 10, the authors require to take $\beta(t,\delta)=\log\frac{Ct^2}{\delta}$ with $C\geq e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left(\log (Ct^2))^2\log t\right)^K}{t^2}$, without delivering an exact value of $C$. This constant also occurs at the Lemma 14 at page 7, which take $f(t)=Ct^{10}$.
+
+If we take $C=1$, we have
+$$
+\begin{align*}
+& e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left(\log (Ct^2))^2\log t\right)^K}{t^2}\\
+= & e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left((2\log t)^2\log t\right)^K}{t^2}\\
+= & e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left(4(\log t)^3\right)^K}{t^2}\\
+= & e\sum_{t=1}^{+\infty}(\frac{4e (\log t)^3}{K})^K\frac{1}{t^2}\\
+\end{align*}
+$$
+
 
 ## Determine $\vec{w}_t$
 
