@@ -60,7 +60,9 @@ class Sticky_TaS_old(object):
         arm = self.action_[self.t - 1]
         self.total_reward_[arm - 1] += reward
         self.pulling_times_[arm - 1] += 1
-        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
+        self.mean_reward_[arm - 1] = (
+            self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
+        )
         self.t += 1
 
         # calculate the arm to be pulled in the next round
@@ -81,14 +83,22 @@ class Sticky_TaS_old(object):
         if max_mean > self.xi:
             a0 = np.argmax(self.mean_reward_) + 1
             beta_t = self.beta(self.t - 1)
-            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+            condition = (
+                self.pulling_times_[a0 - 1]
+                * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                / 2
+            )
             if beta_t < condition:
                 self.stop = True
                 return a0
         else:
             for arm in np.arange(1, self.K + 1):
                 beta_t = self.beta(self.t - 1)
-                condition = self.pulling_times_[arm - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+                condition = (
+                    self.pulling_times_[arm - 1]
+                    * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                    / 2
+                )
                 if condition <= beta_t:
                     # that means we can find an instance that is in both $\neg i$
                     # and $\mathcal{D}_t$
@@ -107,7 +117,9 @@ class Sticky_TaS_old(object):
         projected_w[threshold_index] = epsilon
 
         gap = np.sum(np.maximum(epsilon - w, 0))
-        projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
+        projected_w[~threshold_index] = w[~threshold_index] - gap / (
+            np.sum(~threshold_index)
+        )
 
         return projected_w
 
@@ -150,7 +162,10 @@ class Sticky_TaS_old(object):
                 index_arm = hatmu > hat_mu_arm_t
                 mu_temp = hatmu[index_arm]
                 Nt = pulling[index_arm]
-                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+                f = lambda x: np.sum(
+                    N_arm_t * (x - hat_mu_arm_t) ** 2
+                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
+                )
                 if gss(f, hatmu[arm - 1], best_emp, ft):
                     It.append(arm)
             else:
@@ -159,7 +174,10 @@ class Sticky_TaS_old(object):
                 index_better_than_arm = hatmu > self.xi
                 mu_temp = hatmu[index_better_than_arm]
                 Nt = pulling[index_better_than_arm]
-                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+                f = lambda x: np.sum(
+                    N_arm_t * (x - hat_mu_arm_t) ** 2
+                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
+                )
                 if gss(f, self.xi, best_emp, ft):
                     It.append(arm)
         return It
@@ -200,7 +218,9 @@ class Sticky_TaS(object):
         arm = self.action_[self.t - 1]
         self.total_reward_[arm - 1] += reward
         self.pulling_times_[arm - 1] += 1
-        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
+        self.mean_reward_[arm - 1] = (
+            self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
+        )
         self.t += 1
 
         # calculate the arm to be pulled in the next round
@@ -221,14 +241,22 @@ class Sticky_TaS(object):
         if max_mean > self.xi:
             a0 = np.argmax(self.mean_reward_) + 1
             beta_t = self.beta(self.t - 1)
-            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+            condition = (
+                self.pulling_times_[a0 - 1]
+                * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                / 2
+            )
             if beta_t < condition:
                 self.stop = True
                 return a0
         else:
             for arm in np.arange(1, self.K + 1):
                 beta_t = self.beta(self.t - 1)
-                condition = self.pulling_times_[arm - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+                condition = (
+                    self.pulling_times_[arm - 1]
+                    * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                    / 2
+                )
                 if condition <= beta_t:
                     # that means we can find an instance that is in both $\neg i$
                     # and $\mathcal{D}_t$
@@ -247,7 +275,9 @@ class Sticky_TaS(object):
         projected_w[threshold_index] = epsilon
 
         gap = np.sum(np.maximum(epsilon - w, 0))
-        projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
+        projected_w[~threshold_index] = w[~threshold_index] - gap / (
+            np.sum(~threshold_index)
+        )
 
         return projected_w
 
@@ -288,7 +318,10 @@ class Sticky_TaS(object):
                 index_arm = hatmu > hat_mu_arm_t
                 mu_temp = hatmu[index_arm]
                 Nt = pulling[index_arm]
-                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+                f = lambda x: np.sum(
+                    N_arm_t * (x - hat_mu_arm_t) ** 2
+                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
+                )
 
                 if gss(f, hatmu[arm - 1], best_emp, ft):
                     return arm
@@ -299,7 +332,10 @@ class Sticky_TaS(object):
                 mu_temp = hatmu[index_better_than_arm]
                 Nt = pulling[index_better_than_arm]
 
-                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+                f = lambda x: np.sum(
+                    N_arm_t * (x - hat_mu_arm_t) ** 2
+                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
+                )
 
                 if gss(f, self.xi, best_emp, ft):
                     return arm
@@ -344,7 +380,9 @@ class Sticky_TaS_fast(object):
         arm = self.action_[self.t - 1]
         self.total_reward_[arm - 1] += reward
         self.pulling_times_[arm - 1] += 1
-        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
+        self.mean_reward_[arm - 1] = (
+            self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
+        )
         self.t += 1
 
         # calculate the arm to be pulled in the next round
@@ -365,14 +403,22 @@ class Sticky_TaS_fast(object):
         if max_mean > self.xi:
             a0 = np.argmax(self.mean_reward_) + 1
             beta_t = self.beta(self.t - 1)
-            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+            condition = (
+                self.pulling_times_[a0 - 1]
+                * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                / 2
+            )
             if beta_t < condition:
                 self.stop = True
                 return a0
         else:
             for arm in np.arange(1, self.K + 1):
                 beta_t = self.beta(self.t - 1)
-                condition = self.pulling_times_[arm - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+                condition = (
+                    self.pulling_times_[arm - 1]
+                    * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                    / 2
+                )
                 if condition <= beta_t:
                     # that means we can find an instance that is in both $\neg i$
                     # and $\mathcal{D}_t$
@@ -391,7 +437,9 @@ class Sticky_TaS_fast(object):
         projected_w[threshold_index] = epsilon
 
         gap = np.sum(np.maximum(epsilon - w, 0))
-        projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
+        projected_w[~threshold_index] = w[~threshold_index] - gap / (
+            np.sum(~threshold_index)
+        )
 
         return projected_w
 
@@ -425,6 +473,9 @@ class Sticky_TaS_fast(object):
         if condition < ft:
             return 1
 
+        arms_above_xi = np.where(hatmu > self.xi) + 1  # O(K)
+        mu_above_xi = hatmu[arms_above_xi - 1]  # O(K)
+
         not_included_arm_ = []
         for arm in range(1, best_emp_arm):
             hat_mu_arm_t = hatmu[arm - 1]
@@ -437,13 +488,18 @@ class Sticky_TaS_fast(object):
                 index_arm = hatmu > hat_mu_arm_t
                 mu_temp = hatmu[index_arm]
                 Nt = pulling[index_arm]
-                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
+                f = lambda x: np.sum(
+                    N_arm_t * (x - hat_mu_arm_t) ** 2
+                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
+                )
 
                 if gss(f, hatmu[arm - 1], best_emp, ft):
                     return arm
                 else:
                     not_included_arm_ = [
-                        (nt, hatmu) for (nt, hatmu) in not_included_arm_ if nt < N_arm_t or hatmu >= hat_mu_arm_t
+                        (nt, hatmu)
+                        for (nt, hatmu) in not_included_arm_
+                        if nt < N_arm_t or hatmu >= hat_mu_arm_t
                     ]
                     not_included_arm_.append((hat_mu_arm_t, N_arm_t))
             else:
