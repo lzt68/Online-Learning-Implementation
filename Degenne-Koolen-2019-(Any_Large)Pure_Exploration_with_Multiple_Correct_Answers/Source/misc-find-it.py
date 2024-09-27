@@ -173,13 +173,7 @@ def enumerate_benchmark(hatmu, pulling, xi, ft):
         Nt_temp = pulling[hatmu > mu_arm]
         mu_temp = hatmu[hatmu > mu_arm]
 
-        f = (
-            lambda x: (
-                N_arm * (x - mu_arm) ** 2
-                + np.sum(Nt_temp * (np.maximum(mu_temp - x, 0) ** 2))
-            )
-            / 2
-        )
+        f = lambda x: (N_arm * (x - mu_arm) ** 2 + np.sum(Nt_temp * (np.maximum(mu_temp - x, 0) ** 2))) / 2
         opt, optval = gss(f, mu_arm, np.max(mu_temp))
 
         if optval < ft:
@@ -202,7 +196,7 @@ pulling_above_xi = pulling[arms_above_xi - 1]  # O(K)
 sorted_index_mu_above_xi = np.argsort(mu_above_xi)[::-1]  # O(K log K)
 
 sorted_mu_above_xi = mu_above_xi[sorted_index_mu_above_xi]  # O(K)
-sorted_arm_above_xi = arms_above_xi[sorted_index_mu_above_xi]  # O(K)
+# sorted_arm_above_xi = arms_above_xi[sorted_index_mu_above_xi]  # O(K)
 sorted_pulling_above_xi = pulling_above_xi[sorted_index_mu_above_xi]  # O(K)
 # sorted_mu_above_xi[0] is the maximum value of mu_above_xi
 # sorted_mu_above_xi[1] is the second maximum value of mu_above_xi
@@ -214,17 +208,16 @@ arm_order = np.argsort(mu_order_index)
 
 # pre-calculate value
 mu_times_Nt = sorted_mu_above_xi * sorted_pulling_above_xi
-Nt_cumsum = np.cumsum(sorted_pulling_above_xi)
+# Nt_cumsum = np.cumsum(sorted_pulling_above_xi)
+cum_sorted_pulling_above_xi = np.cumsum(sorted_pulling_above_xi)
 total_largest_sum = np.cumsum(mu_times_Nt)
-center_point = total_largest_sum / Nt_cumsum
+center_point = total_largest_sum / cum_sorted_pulling_above_xi
 
 # this part is used to calculate the function value
 cum_sorted_mu_above_xi = np.cumsum(sorted_mu_above_xi)  # first order sum
-cum_sorted_pulling_above_xi = np.cumsum(sorted_pulling_above_xi)
+# cum_sorted_pulling_above_xi = np.cumsum(sorted_pulling_above_xi)
 cum_sorted_pulling_mu_above_xi = np.cumsum(sorted_pulling_above_xi * sorted_mu_above_xi)
-cum2_sorted_pulling_mu_above_xi = np.cumsum(
-    sorted_pulling_above_xi * sorted_mu_above_xi**2
-)
+cum2_sorted_pulling_mu_above_xi = np.cumsum(sorted_pulling_above_xi * sorted_mu_above_xi**2)
 
 for arm in range(1, K + 1):
     find_or_not = False
@@ -254,28 +247,15 @@ for arm in range(1, K + 1):
 
         middle_index = (leftindex + rightindex) // 2
 
-        new_center_point = (
-            center_point[middle_index] * Nt_cumsum[middle_index] + mu_arm * N_arm
-        ) / (Nt_cumsum[middle_index] + N_arm)
-
-        middle_next_mean = (
-            mu_arm
-            if middle_index == arm_order[arm - 1] - 1
-            else sorted_mu_above_xi[middle_index + 1]
+        new_center_point = (center_point[middle_index] * cum_sorted_pulling_above_xi[middle_index] + mu_arm * N_arm) / (
+            cum_sorted_pulling_above_xi[middle_index] + N_arm
         )
-        if (
-            new_center_point > middle_next_mean
-            and new_center_point < sorted_mu_above_xi[middle_index]
-        ):
+
+        middle_next_mean = mu_arm if middle_index == arm_order[arm - 1] - 1 else sorted_mu_above_xi[middle_index + 1]
+        if new_center_point > middle_next_mean and new_center_point < sorted_mu_above_xi[middle_index]:
             # then we need to test whether the function value is below ft
-            fval = (
-                N_arm + cum_sorted_pulling_above_xi[middle_index]
-            ) * new_center_point**2
-            fval -= (
-                2
-                * (N_arm * mu_arm + cum_sorted_pulling_mu_above_xi[middle_index])
-                * new_center_point
-            )
+            fval = (N_arm + cum_sorted_pulling_above_xi[middle_index]) * new_center_point**2
+            fval -= 2 * (N_arm * mu_arm + cum_sorted_pulling_mu_above_xi[middle_index]) * new_center_point
             fval += N_arm * mu_arm**2 + cum2_sorted_pulling_mu_above_xi[middle_index]
             fval /= 2
             if fval < ft:
