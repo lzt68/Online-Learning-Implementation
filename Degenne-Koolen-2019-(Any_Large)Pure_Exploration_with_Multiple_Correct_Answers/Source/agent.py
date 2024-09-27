@@ -475,6 +475,12 @@ class Sticky_TaS_fast(object):
 
         arms_above_xi = np.where(hatmu > self.xi) + 1  # O(K)
         mu_above_xi = hatmu[arms_above_xi - 1]  # O(K)
+        sorted_index_mu_above_xi = np.argsort(mu_above_xi)[::-1]  # O(K log K)
+        sorted_mu_above_xi = mu_above_xi[sorted_index_mu_above_xi]
+        sorted_arm_above_xi = arms_above_xi[sorted_index_mu_above_xi]
+        # sorted_mu_above_xi[0] is the maximum value of mu_above_xi
+        # sorted_mu_above_xi[1] is the second maximum value of mu_above_xi
+        # sorted_arm_above_xi[0] is the arm index that has the maximum hatmu
 
         not_included_arm_ = []
         for arm in range(1, best_emp_arm):
