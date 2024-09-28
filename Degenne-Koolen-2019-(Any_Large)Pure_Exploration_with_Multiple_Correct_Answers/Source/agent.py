@@ -60,9 +60,7 @@ class Sticky_TaS_old(object):
         arm = self.action_[self.t - 1]
         self.total_reward_[arm - 1] += reward
         self.pulling_times_[arm - 1] += 1
-        self.mean_reward_[arm - 1] = (
-            self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
-        )
+        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
         self.t += 1
 
         # calculate the arm to be pulled in the next round
@@ -83,22 +81,14 @@ class Sticky_TaS_old(object):
         if max_mean > self.xi:
             a0 = np.argmax(self.mean_reward_) + 1
             beta_t = self.beta(self.t - 1)
-            condition = (
-                self.pulling_times_[a0 - 1]
-                * (self.mean_reward_[arm - 1] - self.xi) ** 2
-                / 2
-            )
+            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
             if beta_t < condition:
                 self.stop = True
                 return a0
         else:
             for arm in np.arange(1, self.K + 1):
                 beta_t = self.beta(self.t - 1)
-                condition = (
-                    self.pulling_times_[arm - 1]
-                    * (self.mean_reward_[arm - 1] - self.xi) ** 2
-                    / 2
-                )
+                condition = self.pulling_times_[arm - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
                 if condition <= beta_t:
                     # that means we can find an instance that is in both $\neg i$
                     # and $\mathcal{D}_t$
@@ -112,14 +102,22 @@ class Sticky_TaS_old(object):
     def get_projection(self, w, epsilon):
         # project the w into the $[\epsilon, 1]^K \cap \Sigma_K$, through solving linear optimization problem
         # Please check README.md to see why the following codes can find the projection
-        projected_w = np.zeros(self.K)
-        threshold_index = w < epsilon
-        projected_w[threshold_index] = epsilon
 
-        gap = np.sum(np.maximum(epsilon - w, 0))
-        projected_w[~threshold_index] = w[~threshold_index] - gap / (
-            np.sum(~threshold_index)
-        )
+        sorted_index_w = np.argsort(w)
+        projected_w = np.zeros(self.K)
+        B = 0
+        for j in range(self.K):
+            arm_index = sorted_index_w[j] + 1
+            if w[arm_index - 1] <= epsilon:
+                projected_w[arm_index - 1] = epsilon
+                B += epsilon - w[arm_index - 1]
+            else:
+                if B / (self.K - 1 - j + 1) <= (w[arm_index - 1] - epsilon):
+                    projected_w[sorted_index_w[j:]] = w[sorted_index_w[j:]] - B / (self.K - 1 - j + 1)
+                    return projected_w
+                else:
+                    projected_w[arm_index - 1] = epsilon
+                    B -= w[arm_index - 1] - epsilon
 
         return projected_w
 
@@ -162,10 +160,7 @@ class Sticky_TaS_old(object):
                 index_arm = hatmu > hat_mu_arm_t
                 mu_temp = hatmu[index_arm]
                 Nt = pulling[index_arm]
-                f = lambda x: np.sum(
-                    N_arm_t * (x - hat_mu_arm_t) ** 2
-                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
-                )
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
                 if gss(f, hatmu[arm - 1], best_emp, ft):
                     It.append(arm)
             else:
@@ -174,10 +169,7 @@ class Sticky_TaS_old(object):
                 index_better_than_arm = hatmu > self.xi
                 mu_temp = hatmu[index_better_than_arm]
                 Nt = pulling[index_better_than_arm]
-                f = lambda x: np.sum(
-                    N_arm_t * (x - hat_mu_arm_t) ** 2
-                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
-                )
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
                 if gss(f, self.xi, best_emp, ft):
                     It.append(arm)
         return It
@@ -218,9 +210,7 @@ class Sticky_TaS(object):
         arm = self.action_[self.t - 1]
         self.total_reward_[arm - 1] += reward
         self.pulling_times_[arm - 1] += 1
-        self.mean_reward_[arm - 1] = (
-            self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
-        )
+        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
         self.t += 1
 
         # calculate the arm to be pulled in the next round
@@ -241,22 +231,14 @@ class Sticky_TaS(object):
         if max_mean > self.xi:
             a0 = np.argmax(self.mean_reward_) + 1
             beta_t = self.beta(self.t - 1)
-            condition = (
-                self.pulling_times_[a0 - 1]
-                * (self.mean_reward_[a0 - 1] - self.xi) ** 2
-                / 2
-            )
+            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[a0 - 1] - self.xi) ** 2 / 2
             if beta_t < condition:
                 self.stop = True
                 return a0
         else:
             for arm in np.arange(1, self.K + 1):
                 beta_t = self.beta(self.t - 1)
-                condition = (
-                    self.pulling_times_[arm - 1]
-                    * (self.mean_reward_[arm - 1] - self.xi) ** 2
-                    / 2
-                )
+                condition = self.pulling_times_[arm - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
                 if condition <= beta_t:
                     # that means we can find an instance that is in both $\neg i$
                     # and $\mathcal{D}_t$
@@ -270,14 +252,22 @@ class Sticky_TaS(object):
     def get_projection(self, w, epsilon):
         # project the w into the $[\epsilon, 1]^K \cap \Sigma_K$, through solving linear optimization problem
         # Please check README.md to see why the following codes can find the projection
-        projected_w = np.zeros(self.K)
-        threshold_index = w < epsilon
-        projected_w[threshold_index] = epsilon
 
-        gap = np.sum(np.maximum(epsilon - w, 0))
-        projected_w[~threshold_index] = w[~threshold_index] - gap / (
-            np.sum(~threshold_index)
-        )
+        sorted_index_w = np.argsort(w)
+        projected_w = np.zeros(self.K)
+        B = 0
+        for j in range(self.K):
+            arm_index = sorted_index_w[j] + 1
+            if w[arm_index - 1] <= epsilon:
+                projected_w[arm_index - 1] = epsilon
+                B += epsilon - w[arm_index - 1]
+            else:
+                if B / (self.K - 1 - j + 1) <= (w[arm_index - 1] - epsilon):
+                    projected_w[sorted_index_w[j:]] = w[sorted_index_w[j:]] - B / (self.K - 1 - j + 1)
+                    return projected_w
+                else:
+                    projected_w[arm_index - 1] = epsilon
+                    B -= w[arm_index - 1] - epsilon
 
         return projected_w
 
@@ -318,10 +308,7 @@ class Sticky_TaS(object):
                 index_arm = hatmu > hat_mu_arm_t
                 mu_temp = hatmu[index_arm]
                 Nt = pulling[index_arm]
-                f = lambda x: np.sum(
-                    N_arm_t * (x - hat_mu_arm_t) ** 2
-                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
-                )
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
 
                 if gss(f, hatmu[arm - 1], best_emp, ft):
                     return arm
@@ -332,10 +319,7 @@ class Sticky_TaS(object):
                 mu_temp = hatmu[index_better_than_arm]
                 Nt = pulling[index_better_than_arm]
 
-                f = lambda x: np.sum(
-                    N_arm_t * (x - hat_mu_arm_t) ** 2
-                    + Nt * (np.maximum(mu_temp - x, 0) ** 2)
-                )
+                f = lambda x: np.sum(N_arm_t * (x - hat_mu_arm_t) ** 2 + Nt * (np.maximum(mu_temp - x, 0) ** 2))
 
                 if gss(f, self.xi, best_emp, ft):
                     return arm
@@ -380,9 +364,7 @@ class Sticky_TaS_fast(object):
         arm = self.action_[self.t - 1]
         self.total_reward_[arm - 1] += reward
         self.pulling_times_[arm - 1] += 1
-        self.mean_reward_[arm - 1] = (
-            self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
-        )
+        self.mean_reward_[arm - 1] = self.total_reward_[arm - 1] / self.pulling_times_[arm - 1]
         self.t += 1
 
         # calculate the arm to be pulled in the next round
@@ -400,22 +382,14 @@ class Sticky_TaS_fast(object):
         if max_mean > self.xi:
             a0 = np.argmax(self.mean_reward_) + 1
             beta_t = self.beta(self.t - 1)
-            condition = (
-                self.pulling_times_[a0 - 1]
-                * (self.mean_reward_[a0 - 1] - self.xi) ** 2
-                / 2
-            )
+            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[a0 - 1] - self.xi) ** 2 / 2
             if beta_t < condition:
                 self.stop = True
                 return a0
         else:
             for arm in np.arange(1, self.K + 1):
                 beta_t = self.beta(self.t - 1)
-                condition = (
-                    self.pulling_times_[arm - 1]
-                    * (self.mean_reward_[arm - 1] - self.xi) ** 2
-                    / 2
-                )
+                condition = self.pulling_times_[arm - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
                 if condition <= beta_t:
                     # that means we can find an instance that is in both $\neg i$
                     # and $\mathcal{D}_t$
@@ -429,14 +403,22 @@ class Sticky_TaS_fast(object):
     def get_projection(self, w, epsilon):
         # project the w into the $[\epsilon, 1]^K \cap \Sigma_K$, through solving linear optimization problem
         # Please check README.md to see why the following codes can find the projection
-        projected_w = np.zeros(self.K)
-        threshold_index = w < epsilon
-        projected_w[threshold_index] = epsilon
 
-        gap = np.sum(np.maximum(epsilon - w, 0))
-        projected_w[~threshold_index] = w[~threshold_index] - gap / (
-            np.sum(~threshold_index)
-        )
+        sorted_index_w = np.argsort(w)
+        projected_w = np.zeros(self.K)
+        B = 0
+        for j in range(self.K):
+            arm_index = sorted_index_w[j] + 1
+            if w[arm_index - 1] <= epsilon:
+                projected_w[arm_index - 1] = epsilon
+                B += epsilon - w[arm_index - 1]
+            else:
+                if B / (self.K - 1 - j + 1) <= (w[arm_index - 1] - epsilon):
+                    projected_w[sorted_index_w[j:]] = w[sorted_index_w[j:]] - B / (self.K - 1 - j + 1)
+                    return projected_w
+                else:
+                    projected_w[arm_index - 1] = epsilon
+                    B -= w[arm_index - 1] - epsilon
 
         return projected_w
 
@@ -473,17 +455,15 @@ class Sticky_TaS_fast(object):
         # pre-calculate value for the sequential testing
         # arms_above_xi, num_arms_above_xi = self.Get_Arms_Above_xi(hatmu)
         arms_above_xi = self.Get_Arms_Above_xi(hatmu)
-        sorted_mu_above_xi, sorted_pulling_above_xi, arm_order = (
-            self.Get_Sorted_mu_pulling_slice(arms_above_xi, hatmu, pulling)
+        sorted_mu_above_xi, sorted_pulling_above_xi, arm_order = self.Get_Sorted_mu_pulling_slice(
+            arms_above_xi, hatmu, pulling
         )
-        center_point, cum_sorted_pulling_above_xi = self.Get_center_point(
-            sorted_mu_above_xi, sorted_pulling_above_xi
-        )
+        center_point, cum_sorted_pulling_above_xi = self.Get_center_point(sorted_mu_above_xi, sorted_pulling_above_xi)
         # cum_sorted_mu_above_xi, cum_sorted_pulling_mu_above_xi, cum2_sorted_pulling_mu_above_xi = self.Get_center_point(
         #     sorted_mu_above_xi, sorted_pulling_above_xi
         # )
-        cum_sorted_pulling_mu_above_xi, cum2_sorted_pulling_mu_above_xi = (
-            self.Get_center_point(sorted_mu_above_xi, sorted_pulling_above_xi)
+        cum_sorted_pulling_mu_above_xi, cum2_sorted_pulling_mu_above_xi = self.Get_center_point(
+            sorted_mu_above_xi, sorted_pulling_above_xi
         )
         for arm in range(1, self.K + 1):
             if hatmu[arm - 1] < self.xi:
@@ -501,35 +481,16 @@ class Sticky_TaS_fast(object):
             while True:
                 middle_index = (leftindex + rightindex) // 2
                 new_center_point = (
-                    center_point[middle_index]
-                    * cum_sorted_pulling_above_xi[middle_index]
-                    + mu_arm * N_arm
+                    center_point[middle_index] * cum_sorted_pulling_above_xi[middle_index] + mu_arm * N_arm
                 ) / (cum_sorted_pulling_above_xi[middle_index] + N_arm)
                 middle_next_mean = (
-                    mu_arm
-                    if middle_index == arm_order[arm - 1] - 1
-                    else sorted_mu_above_xi[middle_index + 1]
+                    mu_arm if middle_index == arm_order[arm - 1] - 1 else sorted_mu_above_xi[middle_index + 1]
                 )
-                if (
-                    new_center_point > middle_next_mean
-                    and new_center_point < sorted_mu_above_xi[middle_index]
-                ):
+                if new_center_point > middle_next_mean and new_center_point < sorted_mu_above_xi[middle_index]:
                     # then we need to test whether the function value is below ft
-                    fval = (
-                        N_arm + cum_sorted_pulling_above_xi[middle_index]
-                    ) * new_center_point**2
-                    fval -= (
-                        2
-                        * (
-                            N_arm * mu_arm
-                            + cum_sorted_pulling_mu_above_xi[middle_index]
-                        )
-                        * new_center_point
-                    )
-                    fval += (
-                        N_arm * mu_arm**2
-                        + cum2_sorted_pulling_mu_above_xi[middle_index]
-                    )
+                    fval = (N_arm + cum_sorted_pulling_above_xi[middle_index]) * new_center_point**2
+                    fval -= 2 * (N_arm * mu_arm + cum_sorted_pulling_mu_above_xi[middle_index]) * new_center_point
+                    fval += N_arm * mu_arm**2 + cum2_sorted_pulling_mu_above_xi[middle_index]
                     fval /= 2
                     if fval < ft:
                         return arm
@@ -575,15 +536,67 @@ class Sticky_TaS_fast(object):
 
     def Get_order_sum(self, sorted_mu_above_xi, sorted_pulling_above_xi):
         # cum_sorted_mu_above_xi = np.cumsum(sorted_mu_above_xi)  # first order sum
-        cum_sorted_pulling_mu_above_xi = np.cumsum(
-            sorted_pulling_above_xi * sorted_mu_above_xi
-        )
-        cum2_sorted_pulling_mu_above_xi = np.cumsum(
-            sorted_pulling_above_xi * sorted_mu_above_xi**2
-        )
+        cum_sorted_pulling_mu_above_xi = np.cumsum(sorted_pulling_above_xi * sorted_mu_above_xi)
+        cum2_sorted_pulling_mu_above_xi = np.cumsum(sorted_pulling_above_xi * sorted_mu_above_xi**2)
         return cum_sorted_pulling_mu_above_xi, cum2_sorted_pulling_mu_above_xi
         # return cum_sorted_mu_above_xi, cum_sorted_pulling_mu_above_xi, cum2_sorted_pulling_mu_above_xi
 
+
+# %% unit test 0, test the projection of vector
+# use LP to check the optimal projection
+# from scipy.optimize import linprog
+
+
+# def lp_get_projection(w, epsilon):
+#     # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html
+#     K = len(w)
+
+#     c = np.zeros(K + 1)
+#     c[-1] = 1
+
+#     Aub = np.zeros((3 * K, K + 1))
+#     bub = np.zeros(3 * K)
+#     Aub[0:K, 0:K] = np.eye(K)
+#     Aub[0:K, K] = -1
+#     bub[0:K] = w
+#     Aub[K : 2 * K, 0:K] = -np.eye(K)
+#     Aub[K : 2 * K, K] = -1
+#     bub[K : 2 * K] = -w
+#     Aub[2 * K : 3 * K, 0:K] = -np.eye(K)
+#     bub[2 * K : 3 * K] = -epsilon
+
+#     Aeq = np.ones((1, K + 1))
+#     Aeq[0, -1] = 0
+#     beq = np.ones((1, 1))
+
+#     res = linprog(c=c, A_ub=Aub, b_ub=bub, A_eq=Aeq, b_eq=beq)
+#     return res.fun
+
+
+# w = np.array([2 / 9, 2 / 9, 2 / 9, 1 / 3, 0.0])
+# epsilon = 1 / 6
+# K = len(w)
+# agent_sas_fast = Sticky_TaS_fast(K=K, delta=0.01, xi=0.5)
+# projected_w = agent_sas_fast.get_projection(w=w, epsilon=epsilon)
+# optvalue = lp_get_projection(w, epsilon)
+# print(projected_w)
+# print("our:", np.max(np.abs(projected_w - w)), "benchmark:", optvalue)
+
+# K = 25
+# agent_sas_fast = Sticky_TaS_fast(K=K, delta=0.01, xi=0.5)
+# exp_num = 100
+# np.random.seed(12345)
+# epsilon = 1 / K / 3
+# for exp_id in range(exp_num):
+#     w = np.random.uniform(low=0.0, high=1.0, size=K)
+#     w = w / np.sum(w)
+#     projected_w = agent_sas_fast.get_projection(w=w, epsilon=epsilon)
+#     assert (
+#         np.min(projected_w) >= epsilon and np.abs(np.sum(projected_w) - 1) < 1e-6
+#     ), f"projection fail to work, {exp_id}"
+#     optvalue = lp_get_projection(w, epsilon)
+#     assert np.abs(np.max(np.abs(projected_w - w)) - optvalue) < 1e-6, "projection not close to the benchmark"
+# print("Pass the test")
 
 # %% unit test 1, test Sticky_TaS
 # from env import Environment_Gaussian
@@ -854,43 +867,43 @@ class Sticky_TaS_fast(object):
 # plt.show()
 
 # %% unit test 5, check whether the actions from the Sticky_TaS_fast, Sticky_TaS are the same
-from env import Environment_Gaussian
+# from env import Environment_Gaussian
 
-K = 1000
-xi = 0.5
-Delta = 0.01
-rlist = np.ones(K) * xi
-rlist[1:K] = xi + Delta
-rlist[0] = 1.0
+# K = 1000
+# xi = 0.5
+# Delta = 0.01
+# rlist = np.ones(K) * xi
+# rlist[1:K] = xi + Delta
+# rlist[0] = 1.0
 
-delta = 0.01
-n_exp = 1
+# delta = 0.01
+# n_exp = 1
 
 
-rlist_temp = rlist[::-1].copy()
-# np.random.seed(exp_id)
-# np.random.shuffle(rlist_temp)
-answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+# rlist_temp = rlist[::-1].copy()
+# # np.random.seed(exp_id)
+# # np.random.shuffle(rlist_temp)
+# answer_set = list(np.where(rlist_temp > xi)[0] + 1)
 
-env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=0)
-agent_sas = Sticky_TaS(K=K, delta=delta, xi=xi)
-agent_sas_fast = Sticky_TaS_fast(K=K, delta=delta, xi=xi)
+# env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=0)
+# agent_sas = Sticky_TaS(K=K, delta=delta, xi=xi)
+# agent_sas_fast = Sticky_TaS_fast(K=K, delta=delta, xi=xi)
 
-len_statistic = K * 10
-execution_time_fast = np.zeros(len_statistic)
-execution_time = np.zeros(len_statistic)
+# len_statistic = K * 10
+# execution_time_fast = np.zeros(len_statistic)
+# execution_time = np.zeros(len_statistic)
 
-count_round = 0
-while (not agent_sas.stop) or (not agent_sas_fast.stop):
-    arm_sas_fast = agent_sas_fast.action()
-    arm_sas = agent_sas.action()
-    assert arm_sas_fast == arm_sas, f"round {agent_sas.t} inconsistent"
-    assert agent_sas.stop == agent_sas_fast.stop, f"round {agent_sas.t} inconsistent"
+# count_round = 0
+# while (not agent_sas.stop) or (not agent_sas_fast.stop):
+#     arm_sas_fast = agent_sas_fast.action()
+#     arm_sas = agent_sas.action()
+#     assert arm_sas_fast == arm_sas, f"round {agent_sas.t} inconsistent"
+#     assert agent_sas.stop == agent_sas_fast.stop, f"round {agent_sas.t} inconsistent"
 
-    reward = env.response(arm_sas_fast)
+#     reward = env.response(arm_sas_fast)
 
-    agent_sas.observe(reward)
-    agent_sas_fast.observe(reward)
+#     agent_sas.observe(reward)
+#     agent_sas_fast.observe(reward)
 
-    if agent_sas.t % 10000 == 0:
-        print(agent_sas.t)
+#     if agent_sas.t % 10000 == 0:
+#         print(agent_sas.t)
