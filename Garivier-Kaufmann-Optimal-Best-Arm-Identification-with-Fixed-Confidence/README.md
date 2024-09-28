@@ -25,8 +25,10 @@ Here we assume the reward follows Bernoulli Distribution.
    $$
    Here $w_1=\frac{1}{1+x_a(y)}, w_a=\frac{x_a(y)}{1+x_a(y)}$.
    
-   3. Define $S_1=\{i: \hat{w}_i < \epsilon\}$, $S_2=\{i: \hat{w}_i \geq \epsilon\}$. If $S_1=\emptyset$, then projected $w$ is $\hat{w}$
-
+   3. 
+      <font color=red>This proof is incorrect and this folder remains uncompleted.</font>
+      Define $S_1=\{i: \hat{w}_i < \epsilon\}$, $S_2=\{i: \hat{w}_i \geq \epsilon\}$. If $S_1=\emptyset$, then projected $w$ is $\hat{w}$
+      
       Define projected $w$ as
       $$
       w_i =\begin{cases}
@@ -35,13 +37,13 @@ Here we assume the reward follows Bernoulli Distribution.
         \end{cases}
       $$
       Prove $w = \arg\min_{\tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K} \|\tilde{w}-\hat{w}\|_{\infty}$, as the projected vector.
-
+      
       By our definition
       $$
       \|w - \hat{w}\|_{\infty} = \max\left\{\max_{i\in S_1}\epsilon-\hat{w}_i, \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} \right\}
       $$
       Easy to see  $\forall \tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K,  \|\tilde{w}-\hat{w}\|_{\infty}\geq \max_{i\in S_1}\epsilon-\hat{w}_i$, Then suffices to prove $\forall \tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K, \|\tilde{w}-\hat{w}\|_{\infty}\geq \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|}$.
-
+      
       For all $w\in \Sigma_{K}\cap [\epsilon, 1]^K$, we have
       $$
         \begin{align*}
@@ -60,7 +62,7 @@ Here we assume the reward follows Bernoulli Distribution.
         \Rightarrow & \max_{i\in [K]} |\hat{w}_i-w_i|\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
         \end{align*}
       $$
-
+      
       which implies $\|w-\hat{w}\|_{\infty}\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}$. Combining with $\|w-\hat{w}\|_{\infty}\geq \max_{i\in S_1}\epsilon-\hat{w}_i$, we have
       $$
       \|w - \hat{w}\|_{\infty} \geq \max\left\{\max_{i\in S_1}\epsilon-\hat{w}_i, \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} \right\},

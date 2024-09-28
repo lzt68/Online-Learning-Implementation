@@ -243,7 +243,7 @@ class Sticky_TaS(object):
             beta_t = self.beta(self.t - 1)
             condition = (
                 self.pulling_times_[a0 - 1]
-                * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                * (self.mean_reward_[a0 - 1] - self.xi) ** 2
                 / 2
             )
             if beta_t < condition:
@@ -387,9 +387,6 @@ class Sticky_TaS_fast(object):
 
         # calculate the arm to be pulled in the next round
         if len(self.pulling_list) == 0:
-            # It = self.Get_It(self.mean_reward_, self.pulling_times_)
-            # it = It[0]
-            # wt = self.Get_wt(self.mean_reward_, it=it)
             wt = self.Get_wt(self.mean_reward_, self.pulling_times_)
             ## C-Track
             epsilon = 1 / np.sqrt(self.K**2 + self.t)
@@ -405,7 +402,7 @@ class Sticky_TaS_fast(object):
             beta_t = self.beta(self.t - 1)
             condition = (
                 self.pulling_times_[a0 - 1]
-                * (self.mean_reward_[arm - 1] - self.xi) ** 2
+                * (self.mean_reward_[a0 - 1] - self.xi) ** 2
                 / 2
             )
             if beta_t < condition:
@@ -855,3 +852,45 @@ class Sticky_TaS_fast(object):
 # )
 # plt.legend()
 # plt.show()
+
+# %% unit test 5, check whether the actions from the Sticky_TaS_fast, Sticky_TaS are the same
+from env import Environment_Gaussian
+
+K = 1000
+xi = 0.5
+Delta = 0.01
+rlist = np.ones(K) * xi
+rlist[1:K] = xi + Delta
+rlist[0] = 1.0
+
+delta = 0.01
+n_exp = 1
+
+
+rlist_temp = rlist[::-1].copy()
+# np.random.seed(exp_id)
+# np.random.shuffle(rlist_temp)
+answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+
+env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=0)
+agent_sas = Sticky_TaS(K=K, delta=delta, xi=xi)
+agent_sas_fast = Sticky_TaS_fast(K=K, delta=delta, xi=xi)
+
+len_statistic = K * 10
+execution_time_fast = np.zeros(len_statistic)
+execution_time = np.zeros(len_statistic)
+
+count_round = 0
+while (not agent_sas.stop) or (not agent_sas_fast.stop):
+    arm_sas_fast = agent_sas_fast.action()
+    arm_sas = agent_sas.action()
+    assert arm_sas_fast == arm_sas, f"round {agent_sas.t} inconsistent"
+    assert agent_sas.stop == agent_sas_fast.stop, f"round {agent_sas.t} inconsistent"
+
+    reward = env.response(arm_sas_fast)
+
+    agent_sas.observe(reward)
+    agent_sas_fast.observe(reward)
+
+    if agent_sas.t % 10000 == 0:
+        print(agent_sas.t)

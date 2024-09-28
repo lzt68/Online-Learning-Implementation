@@ -2,7 +2,11 @@
 This project aims to implement those algorithms from different papers related to online learning (Updating).
 I am a fresh player on this topic. I would use this project the trace my study on online learning. And I sincerely wish this project can also help you better understand those online learning algorithms. Communication is also welcome.
 
-**This project only includes the reproduction of the most simple numeric experiments mentioned in these papers**
+**This project only includes the reproduction of the most simple numeric experiments mentioned in these papers**.
+
+You can use **Typora** to open some markdown files, which may contain some mathematics supplement for omitted details in the paper.
+
+> Link of Typora https://typora.io/
 
 ## Prerequisite
 

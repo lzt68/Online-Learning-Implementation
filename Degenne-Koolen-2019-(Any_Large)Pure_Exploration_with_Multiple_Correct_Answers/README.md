@@ -108,6 +108,38 @@ $$
   + If $i_t\in i^*(\hat{\mu_t})$, we take $\vec{w}_t=e_{i_t}$
   + If $i_t\notin i^*(\hat{\mu_t})$, $\vec{w}_t$ can be any vector in $\Delta_K$, as $\arg\sup_{\vec{w}\in \Delta_K}\inf_{\vec{\lambda}\in \neg i_t}\sum_{a=1}^K w_a\frac{(\mu_a-\lambda_a)^2}{2}=\arg\sup_{\vec{w}\in \Delta_K}0$. Here we take $\vec{w}_t=(\frac{1}{K},\frac{1}{K},\cdots,\frac{1}{K})$.
 
+## The projection of $\vec{w}_t$​
+
+After calculating the value of $\vec{w}_t$, we need to project it onto the class $\Sigma_K^{\epsilon_t}=\{(w_1,\cdots,w_k)\in [\epsilon_t, 1]^K: w_1+w_2+\cdots+w_K=1\}$, based on the $\infty$-norm. We need to derive the explicit expression of this formula.
+
+Denote the projected $w$ onto $\Sigma_K^{\epsilon}$ as $\hat{w}$. 
+
++ Denote $S_1=\{i:w_i <\epsilon\}$, $S_2=\{i: w_i\geq \epsilon\}$
+
++ If $w_i < \epsilon$, we can assert $\hat{w}_i=\epsilon$.
+
+  > Prove by contradiction, if $\exists i$, such that $\hat{w}_i > \epsilon$. 
+  >
+  > From the equality $\sum_{i\in S_1}(\hat{w}_i-w_i) + \sum_{i\in S_2}(\hat{w}_i-w_i)=0$, and the fact $\sum_{i\in S_1}(\hat{w}_i-w_i)\geq \sum_{i\in S_1}(\epsilon-w_i) > 0$, we know $\sum_{i\in S_2}(\hat{w}_i-w_i)<0$, further $\exists i'\in S_2$, such that $\hat{w}_{i'}-w_{i'}<0$.
+  >
+  > Take $\Delta = \min\{|\hat{w}_{i'}-w_{i'}|, |\hat{w}_i-\epsilon|\}$, and take $\tilde{w}_a=\begin{cases}\hat{w}_a & a\neq i,i'\\ \hat{w}_i'-\Delta & a=i\\ \hat{w}_i'+\Delta & a=i'\end{cases}$. Easy to see $\tilde{w}_a\geq \epsilon$, further $\tilde{w}\in \Sigma^{\epsilon}_K$.
+  >
+  > Then $|\tilde{w}_a-w_a|=|\hat{w}_a-w_a|$ for $a\neq i,i'$, and $\max\{|\tilde{w}_i-w_{i}|, |\tilde{w}_{i'}-w_{i'}|\}\leq \max\{|\hat{w}_i-w_{i}|, |\hat{w}_{i'}-w_{i'}|\}$. Thus, $\|\hat{w}-w\|_{\infty}\geq \|\tilde{w}-w\|_{\infty}$​.
+
++ Then it is suffice to find $\hat{w}_i, i\in S_2$, such that
+  $$
+  \sum_{i\in S_2} (w_i-\hat{w}_i ) = \sum_{i\in S_1}(\epsilon - w_i)\\
+  \hat{w}_i\geq \epsilon
+  $$
+
++ If $w_i \geq \epsilon$, we can assert $\hat{w}_i\leq w_i$​​.
+
+  > Prove by contradiction. If $\exists i$, such that $w_i\geq \epsilon$, $\hat{w}_i > w_i$, then we can decrease $w_i$ a little bit while increasing some $\hat{w}_{i'}$ whose $w_{i'}-\hat{w}_{i'}<0$, then the infinity norm will be smaller.
+
++  
+
+
+
 ## Determine whether to stop
 
 The stopping rule in the algorithm is $\exist i\in [K]\cup\{\text{none}\}$, such that $\{\vec{\mu'}: D(N_t,\hat{\mu}_t,\vec{\mu'})\leq \log\frac{Ct^2}{\delta}\} \cap \neg i=\emptyset$.
