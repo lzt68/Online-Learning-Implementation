@@ -746,18 +746,19 @@ class Sticky_TaS_fast(object):
 # # rlist[(K + 1) // 2 : K] = xi - Delta
 # # rlist[0] = 1.0
 
-# K = 1000
+# K = 100
 # xi = 0.5
-# Delta = 0.01
+# Delta = 0.05
 # rlist = np.ones(K) * xi
-# rlist[1:K] = xi + Delta
-# rlist[0] = 1.0
+# rlist[1:K] = 0
+# rlist[0] = xi + Delta
 
 # delta = 0.01
 # n_exp = 1
 
 # # for alg_class in [Sticky_TaS_old, Sticky_TaS]:
-# for alg_class in [Sticky_TaS_fast, Sticky_TaS]:
+# # for alg_class in [Sticky_TaS_fast, Sticky_TaS]:
+# for alg_class in [Sticky_TaS_fast]:
 #     stop_time_ = np.zeros(n_exp)
 #     output_arm_ = list()
 #     correctness_ = np.ones(n_exp)
@@ -795,23 +796,6 @@ class Sticky_TaS_fast(object):
 #     print(f"mean stop time is {mean_stop_time}")
 #     print(f"correctness rate is {mean_success}")
 #     print(f"execution time is {mean_execution_time}")
-# """ output
-# K = 100, xi = 0.5, Delta = 0.01, delta = 0.01, n_exp = 100
-# rlist = np.ones(K) * xi
-# rlist[1 : (K + 1) // 2] = xi + Delta
-# rlist[(K + 1) // 2 : K] = xi - Delta
-# rlist[0] = 1.0
-
-# For algorithm Sticky_TaS_old,
-# mean stop time is 255423.87
-# correctness rate is 1.0
-# execution time is 24.250074293613434
-
-# For algorithm Sticky_TaS,
-# mean stop time is 255423.87
-# correctness rate is 1.0
-# execution time is 22.604291009902955
-# """
 
 # %% unit test 3, how would the permutaion of arms affect the pulling complexity?
 # the gap can be 10 times larger
