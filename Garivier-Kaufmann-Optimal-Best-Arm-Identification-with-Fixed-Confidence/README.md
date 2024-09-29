@@ -25,46 +25,80 @@ Here we assume the reward follows Bernoulli Distribution.
    $$
    Here $w_1=\frac{1}{1+x_a(y)}, w_a=\frac{x_a(y)}{1+x_a(y)}$.
    
-   3. 
-      <font color=red>This proof is incorrect and this folder remains uncompleted.</font>
-      Define $S_1=\{i: \hat{w}_i < \epsilon\}$, $S_2=\{i: \hat{w}_i \geq \epsilon\}$. If $S_1=\emptyset$, then projected $w$ is $\hat{w}$
+   3. After calculating the value of $\vec{w}_t$, we need to project it onto the class $\Sigma_K^{\epsilon_t}=\{(w_1,\cdots,w_k)\in [\epsilon_t, 1]^K: w_1+w_2+\cdots+w_K=1\}$, based on the $\infty$-norm. We need to derive the explicit expression of this formula.
       
-      Define projected $w$ as
-      $$
-      w_i =\begin{cases}
-        \epsilon &  i\in S_1\\
-        \hat{w}_i-\frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} & i\in S_2
-        \end{cases}
-      $$
-      Prove $w = \arg\min_{\tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K} \|\tilde{w}-\hat{w}\|_{\infty}$, as the projected vector.
+      > It is not hard to see there could be multiple $w'\in \Sigma_K^{\epsilon}$ such that minimize $\|w-w'\|_{\infty}$. For example, take $w=(\frac{2}{9},\frac{2}{9},\frac{2}{9},\frac{1}{3}, 0)$, $\epsilon = \frac{1}{6}$, then both $(\frac{2}{9},\frac{2}{9},\frac{2}{9},\frac{1}{6}, \frac{1}{6})$ and $(\frac{2}{9}-\frac{1}{24},\frac{2}{9}-\frac{1}{24},\frac{2}{9}-\frac{1}{24},\frac{1}{3}-\frac{1}{24}, \frac{1}{6})$ would achieve minimum infinity norm value $\frac{1}{6}$. It seems for the algorithm, there isn't any difference between adopting various projections.
+      >
+      > In the following, we aim we to find one possible projections.
       
-      By our definition
-      $$
-      \|w - \hat{w}\|_{\infty} = \max\left\{\max_{i\in S_1}\epsilon-\hat{w}_i, \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} \right\}
-      $$
-      Easy to see  $\forall \tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K,  \|\tilde{w}-\hat{w}\|_{\infty}\geq \max_{i\in S_1}\epsilon-\hat{w}_i$, Then suffices to prove $\forall \tilde{w}\in \Sigma_{K}\cap [\epsilon, 1]^K, \|\tilde{w}-\hat{w}\|_{\infty}\geq \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|}$.
+      If all the entries of $w$ is above $\epsilon$, then $w$ itself is the projection. Here we only focus on the case the minimum entry of $w$ is below $\epsilon$.
       
-      For all $w\in \Sigma_{K}\cap [\epsilon, 1]^K$, we have
-      $$
-        \begin{align*}
-        &\sum_{i\in S_1}\hat{w}_i+\sum_{i\in S_2}\hat{w}_i = \sum_{i\in S_1}w_i+\sum_{i\in S_2}w_i=1\\
-        \Rightarrow & \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right)-\sum_{i\in S_2}\hat{w}_i + \sum_{i\in S_1}w_i+\sum_{i\in S_2}w_i=|S_1|\epsilon\\
-        \Leftrightarrow & \sum_{i\in S_2}(w_i-\hat{w}_i) = |S_1|\epsilon - \sum_{i\in S_1}w_i - \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right)
-        \end{align*}
-      $$
-      Since $w_i\geq \epsilon$, thus $|S_1|\epsilon - \sum_{i\in S_1}w_i\leq 0, |S_1|\epsilon - \sum_{i\in S_1}w_i - \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right) < 0$, we have
-      $$
-        \begin{align*}
-        & \sum_{i\in S_2}(w_i-\hat{w}_i) \leq  - \left(\sum_{i\in S_1}\epsilon-\hat{w}_i\right)\\
-        \Rightarrow & \min_{i\in S_2} w_i-\hat{w}_i\leq - \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
-        \Rightarrow & \max_{i\in S_2} \hat{w}_i-w_i\geq  \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
-        \Rightarrow & \max_{i\in S_2} |\hat{w}_i-w_i|\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
-        \Rightarrow & \max_{i\in [K]} |\hat{w}_i-w_i|\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}\\
-        \end{align*}
-      $$
+      Denote the projected $w$ onto $\Sigma_K^{\epsilon}$ as $\hat{w}$. 
       
-      which implies $\|w-\hat{w}\|_{\infty}\geq \frac{\sum_{i\in S_1}\epsilon-\hat{w}_i}{|S_2|}$. Combining with $\|w-\hat{w}\|_{\infty}\geq \max_{i\in S_1}\epsilon-\hat{w}_i$, we have
+      + Denote $S_1=\{i:w_i <\epsilon\}$, $S_2=\{i: w_i\geq \epsilon\}$
+      
+      + If $w_i < \epsilon$, we can assert $\hat{w}_i=\epsilon$.
+      
+        > Prove by contradiction, if $\exists i$, such that $\hat{w}_i > \epsilon$. 
+        >
+        > From the equality $\sum_{i\in S_1}(\hat{w}_i-w_i) + \sum_{i\in S_2}(\hat{w}_i-w_i)=0$, and the fact $\sum_{i\in S_1}(\hat{w}_i-w_i)\geq \sum_{i\in S_1}(\epsilon-w_i) > 0$, we know $\sum_{i\in S_2}(\hat{w}_i-w_i)<0$, further $\exists i'\in S_2$, such that $\hat{w}_{i'}-w_{i'}<0$.
+        >
+        > Take $\Delta = \min\{|\hat{w}_{i'}-w_{i'}|, |\hat{w}_i-\epsilon|\}$, and take $\tilde{w}_a=\begin{cases}\hat{w}_a & a\neq i,i'\\ \hat{w}_i'-\Delta & a=i\\ \hat{w}_i'+\Delta & a=i'\end{cases}$. Easy to see $\tilde{w}_a\geq \epsilon$, further $\tilde{w}\in \Sigma^{\epsilon}_K$.
+        >
+        > Then $|\tilde{w}_a-w_a|=|\hat{w}_a-w_a|$ for $a\neq i,i'$, and $\max\{|\tilde{w}_i-w_{i}|, |\tilde{w}_{i'}-w_{i'}|\}\leq \max\{|\hat{w}_i-w_{i}|, |\hat{w}_{i'}-w_{i'}|\}$. Thus, $\|\hat{w}-w\|_{\infty}\geq \|\tilde{w}-w\|_{\infty}$​.
+      
+        That means $\min_{w'\in \Sigma_K^{\epsilon }}\|w'-w\|_{\infty}=\min\limits_{w'\in \Sigma_K^{\epsilon };\forall i\in S_1 w'_i=\epsilon}\|w'-w\|_{\infty}$.
+      
+      + Then it is suffice to find $\hat{w}_i, i\in S_2$, such that
+        $$
+        \sum_{i\in S_2} (w_i-\hat{w}_i ) = \sum_{i\in S_1}(\epsilon - w_i)\\
+        \hat{w}_i\geq \epsilon
+        $$
+      
+      + If $w_i \geq \epsilon$, we can assert $\hat{w}_i\leq w_i$​​.
+      
+        > Prove by contradiction. If $\exists i$, such that $w_i\geq \epsilon$, $\hat{w}_i > w_i$, then we can decrease $w_i$ a little bit while increasing some $\hat{w}_{i'}$ whose $w_{i'}-\hat{w}_{i'}<0$, then the infinity norm will be smaller.
+      
+        That means $\min_{w'\in \Sigma_K^{\epsilon }}\|w'-w\|_{\infty}=\min\limits_{w'\in \Sigma_K^{\epsilon };\forall i\in S_1 w_i'=\epsilon; \forall i\in S_2, w_i' \leq w_i}\|w'-w\|_{\infty}$.
+      
+      + An algorithm for determining $\hat{w}_i, i\in S_2$. Assume $|S_2|=m$.
+      
+        1. Sort the elements in $S_2$, denote $i_1,i_2,\cdots, i_m \in S_2$, such that $\epsilon \leq w_{i_1} \leq w_{i_2}\leq \cdots\leq w_{i_m}$. Denote $B = \sum_{i\in S_1}(\epsilon - w_i)$.
+        2. For $j=1,2,\cdots, m$
+           + If $w_{i_j}-\epsilon  > \frac{B}{m-j+1}$, then take $w'_{i_l}=w_{i_l} - \frac{B}{m-j+1}, l=j,j+1,\cdots, m$, break the loop.
+           + If $w_{i_j}-\epsilon \leq \frac{B}{m-j+1}$, then take $w'_{i_j}=\epsilon$, $B=B-(w_{i_j}-\epsilon)$. Go the next loop for $j+1$
+      
+        Easy to see $w_{i_j}-\epsilon \leq \frac{B}{m-j+1}\Leftrightarrow \frac{B-(w_{i_j}-\epsilon)}{m-j} \geq \frac{B}{m-j+1}$
+        By applying this loop, assume at $j_0$, we have
+        $$
+        w_{i_1}'=\epsilon, \cdots ,w_{i_{j_0}}'=\epsilon\\
+        w_{i_{j_0+1}}'=w_{i_{j_0+1}}-\frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}, w_{i_{j_0+2}}'=w_{i_{j_0+2}}-\frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0},\cdots w_{i_{m}}'=w_{i_{m}}-\frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}
+        $$
+        Then, we prove the constructed $w'$ can indeed achieve the minimum infinity norm. Easy to see
+        $$
+        \|w-w'\|_{\infty} =\max\left\{\max_{i\in S_1}\epsilon-w_i, w_{j_0}-\epsilon, \frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}\right\}
+        $$
+      
+        + If $\max\left\{\max_{i\in S_1}\epsilon-w_i, w_{j_0}-\epsilon, \frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}\right\} = \max_{i\in S_1}\epsilon-w_i$, then we are done. As $\|w-w'\|_{\infty}\geq \max_{i\in S_1}\epsilon-w_i$ for $w'\in\Sigma_K^{\epsilon}$.
+          Then we only need to focus on the case $\max_{i\in S_1}\epsilon-w_i < \max\left\{ w_{j_0}-\epsilon, \frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}\right\}$.
+      
+        + From the algorithm, we know
+          $$
+          w_{j_0}-\epsilon\leq \frac{B-\sum_{j=1}^{j_0-1}(w_{i_j}-\epsilon)}{m-j_0+1} \leq \frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0},
+          $$
+          which implies $\|w-w'\|_{\infty} = \max\left\{ w_{j_0}-\epsilon, \frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}\right\} = \frac{B-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}$. 
+      
+          
+      
+      As we have shown $\min_{w'\in \Sigma_K^{\epsilon }}\|w'-w\|_{\infty} = \min\limits_{w'\in \Sigma_K^{\epsilon };\forall i\in S_1 w_i'=\epsilon; \forall i\in S_2, w_i' \leq w_i}\|w'-w\|_{\infty}$. The remaining task is to show $\min\limits_{w'\in \Sigma_K^{\epsilon };\forall i\in S_1 w_i'=\epsilon; \forall i\in S_2, w_i' \leq w_i}\|w'-w\|_{\infty}\geq \frac{\sum_{i\in S_1}(\epsilon - w_i)-\sum_{j=1}^{j_0}(w_{i_j}-\epsilon)}{m-j_0}$.
       $$
-      \|w - \hat{w}\|_{\infty} \geq \max\left\{\max_{i\in S_1}\epsilon-\hat{w}_i, \frac{\sum_{j\in S_1}\epsilon-\hat{w}_j}{|S_2|} \right\},
+      \begin{align*}
+      & 1=\sum_{i=1}^K w_i = \sum_{i=1}^K w_i'\\
+      \Rightarrow & 0 = \sum_{i \in  S_1} (w_i'-w_i) + \sum_{j=1}^{m} (w_{i_j}'-w_{i_j})\\
+      \Rightarrow & 0 \geq \sum_{i \in  S_1} (\epsilon-w_i) + \sum_{j=1}^{j_0} (\epsilon-w_{i_j}) + \sum_{j=j_0+1}^{m} (w_{i_j}'-w_{i_j})\\
+      \Leftrightarrow & \sum_{j=j_0+1}^{m} (w_{i_j}-w_{i_j}') \geq \sum_{i \in  S_1} (\epsilon-w_i) + \sum_{j=1}^{j_0} (w_{i_j}'-w_{i_j})\\
+      \Rightarrow & \min_{j=j_0+1,\cdots, m} w_{i_j}-w_{i_j}' \geq \frac{\sum_{i \in  S_1} (\epsilon-w_i) + \sum_{j=1}^{j_0} (w_{i_j}'-w_{i_j})}{m-j_0}\\
+      \Rightarrow & \min\limits_{w'\in \Sigma_K^{\epsilon };\forall i\in S_1 w_i'=\epsilon; \forall i\in S_2, w_i' \leq w_i}\|w'-w\|_{\infty} \geq \frac{\sum_{i \in  S_1} (\epsilon-w_i) + \sum_{j=1}^{j_0} (w_{i_j}'-w_{i_j})}{m-j_0}
+      \end{align*}
       $$
-      which implies our definition is indeed the projection.
+      Then we have found a way to derive the explicit projection of vector $w$.

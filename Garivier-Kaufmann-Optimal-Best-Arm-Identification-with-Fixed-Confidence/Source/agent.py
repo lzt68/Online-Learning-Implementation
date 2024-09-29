@@ -41,7 +41,9 @@ class D_Tracking(object):
     def action(self):
         assert not self.if_stop, "The algorithm stopped"
 
-        U_t = np.array([aa for aa in range(0, self.K) if self.pulling_times[aa] <= self.g(self.t)])
+        U_t = np.array(
+            [aa for aa in range(0, self.K) if self.pulling_times[aa] <= self.g(self.t)]
+        )
         if len(U_t) >= 1:
             arm_index = np.argmin(self.pulling_times[U_t])
             action = U_t[arm_index] + 1
@@ -61,21 +63,27 @@ class D_Tracking(object):
         self.consumption_[action].append(d)
 
         pull = self.pulling_times[action - 1]
-        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (pull / (pull + 1)) + r / (pull + 1)
-        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (pull / (pull + 1)) + d / (pull + 1)
+        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (
+            pull / (pull + 1)
+        ) + r / (pull + 1)
+        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (
+            pull / (pull + 1)
+        ) + d / (pull + 1)
         self.pulling_times[action - 1] += 1
 
         # judge whether we should stop
         # our stoppting rule is $\max_a\min_{b\ne a} Z_{a, b}(t) > \beta(t, \delta)$
         empirical_best = np.argmax(self.mean_reward_)
 
-        def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
-            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
-                best_pulling_times + pulling_times
-            )
-            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
-                mean_reward, hat_mu_ab
-            )
+        def get_z_ab_t(
+            best_mean_reward, best_pulling_times, mean_reward, pulling_times
+        ):
+            hat_mu_ab = (
+                best_mean_reward * best_pulling_times + mean_reward * pulling_times
+            ) / (best_pulling_times + pulling_times)
+            z_ab_t = best_pulling_times * d_fun(
+                best_mean_reward, hat_mu_ab
+            ) + pulling_times * d_fun(mean_reward, hat_mu_ab)
             return z_ab_t
 
         z_ = np.array(
@@ -136,12 +144,24 @@ class C_Tracking(object):
     def get_projection(self, w, epsilon):
         # project the w into the $[\epsilon, 1]^K \cap \Sigma_K$, through solving linear optimization problem
         # Please check README.md to see why the following codes can find the projection
-        projected_w = np.zeros(self.K)
-        threshold_index = w < epsilon
-        projected_w[threshold_index] = epsilon
 
-        gap = np.sum(np.maximum(epsilon - w, 0))
-        projected_w[~threshold_index] = w[~threshold_index] - gap / (np.sum(~threshold_index))
+        sorted_index_w = np.argsort(w)
+        projected_w = np.zeros(self.K)
+        B = 0
+        for j in range(self.K):
+            arm_index = sorted_index_w[j] + 1
+            if w[arm_index - 1] <= epsilon:
+                projected_w[arm_index - 1] = epsilon
+                B += epsilon - w[arm_index - 1]
+            else:
+                if B / (self.K - 1 - j + 1) <= (w[arm_index - 1] - epsilon):
+                    projected_w[sorted_index_w[j:]] = w[sorted_index_w[j:]] - B / (
+                        self.K - 1 - j + 1
+                    )
+                    return projected_w
+                else:
+                    projected_w[arm_index - 1] = epsilon
+                    B -= w[arm_index - 1] - epsilon
 
         return projected_w
 
@@ -170,21 +190,27 @@ class C_Tracking(object):
         self.consumption_[action].append(d)
 
         pull = self.pulling_times[action - 1]
-        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (pull / (pull + 1)) + r / (pull + 1)
-        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (pull / (pull + 1)) + d / (pull + 1)
+        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (
+            pull / (pull + 1)
+        ) + r / (pull + 1)
+        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (
+            pull / (pull + 1)
+        ) + d / (pull + 1)
         self.pulling_times[action - 1] += 1
 
         # judge whether we should stop
         # our stoppting rule is $\max_a\min_{b\ne a} Z_{a, b}(t) > \beta(t, \delta)$
         empirical_best = np.argmax(self.mean_reward_)
 
-        def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
-            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
-                best_pulling_times + pulling_times
-            )
-            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
-                mean_reward, hat_mu_ab
-            )
+        def get_z_ab_t(
+            best_mean_reward, best_pulling_times, mean_reward, pulling_times
+        ):
+            hat_mu_ab = (
+                best_mean_reward * best_pulling_times + mean_reward * pulling_times
+            ) / (best_pulling_times + pulling_times)
+            z_ab_t = best_pulling_times * d_fun(
+                best_mean_reward, hat_mu_ab
+            ) + pulling_times * d_fun(mean_reward, hat_mu_ab)
             return z_ab_t
 
         z_ = np.array(
