@@ -147,13 +147,30 @@ np.random.seed(12345)
 # hatmu[4] = 1.39340583
 # hatmu[5] = 1.96578057
 
-K = 10000
-hatmu = np.random.normal(loc=0.0, scale=1, size=K)
-hatmu = np.sort(hatmu)
-pulling = np.random.binomial(n=500, p=0.5, size=K)
+# K = 10000
+# hatmu = np.random.normal(loc=0.0, scale=1, size=K)
+# hatmu = np.sort(hatmu)
+# pulling = np.random.binomial(n=500, p=0.5, size=K)
 
-xi = 0
-ft = 100
+K = 10
+hatmu = np.array(
+    [
+        0.71289112,
+        0.73278765,
+        0.67111129,
+        0.98740475,
+        0.60109015,
+        0.76363685,
+        0.79895482,
+        0.67667109,
+        0.86822559,
+        1.02183551,
+    ]
+)
+pulling = np.array([104.0, 19.0, 19.0, 19.0, 19.0, 18.0, 18.0, 18.0, 18.0, 18.0])
+
+xi = 0.5
+ft = 58.286804682977795
 
 # %% find the optimal, bench mark
 
@@ -173,7 +190,13 @@ def enumerate_benchmark(hatmu, pulling, xi, ft):
         Nt_temp = pulling[hatmu > mu_arm]
         mu_temp = hatmu[hatmu > mu_arm]
 
-        f = lambda x: (N_arm * (x - mu_arm) ** 2 + np.sum(Nt_temp * (np.maximum(mu_temp - x, 0) ** 2))) / 2
+        f = (
+            lambda x: (
+                N_arm * (x - mu_arm) ** 2
+                + np.sum(Nt_temp * (np.maximum(mu_temp - x, 0) ** 2))
+            )
+            / 2
+        )
         opt, optval = gss(f, mu_arm, np.max(mu_temp))
 
         if optval < ft:
@@ -217,7 +240,9 @@ center_point = total_largest_sum / cum_sorted_pulling_above_xi
 cum_sorted_mu_above_xi = np.cumsum(sorted_mu_above_xi)  # first order sum
 # cum_sorted_pulling_above_xi = np.cumsum(sorted_pulling_above_xi)
 cum_sorted_pulling_mu_above_xi = np.cumsum(sorted_pulling_above_xi * sorted_mu_above_xi)
-cum2_sorted_pulling_mu_above_xi = np.cumsum(sorted_pulling_above_xi * sorted_mu_above_xi**2)
+cum2_sorted_pulling_mu_above_xi = np.cumsum(
+    sorted_pulling_above_xi * sorted_mu_above_xi**2
+)
 
 for arm in range(1, K + 1):
     find_or_not = False
@@ -225,15 +250,6 @@ for arm in range(1, K + 1):
         continue
     if arm_order[arm - 1] == 0:
         print("new method: ", arm, hatmu[arm - 1], 0)
-    # if arm_order[arm - 1] == 1:
-    #     N_arm = pulling[arm - 1]
-    #     mu_arm = hatmu[arm - 1]
-    #     max_N = sorted_pulling_above_xi[0]
-    #     max_mu = sorted_mu_above_xi[0]
-
-    #     center_point = N_arm * mu_arm + max_N
-
-    #     print("new method: ", arm, hatmu[arm - 1] + mu_order_index, 0)
 
     N_arm = pulling[arm - 1]
     mu_arm = hatmu[arm - 1]
@@ -247,15 +263,29 @@ for arm in range(1, K + 1):
 
         middle_index = (leftindex + rightindex) // 2
 
-        new_center_point = (center_point[middle_index] * cum_sorted_pulling_above_xi[middle_index] + mu_arm * N_arm) / (
-            cum_sorted_pulling_above_xi[middle_index] + N_arm
-        )
+        new_center_point = (
+            center_point[middle_index] * cum_sorted_pulling_above_xi[middle_index]
+            + mu_arm * N_arm
+        ) / (cum_sorted_pulling_above_xi[middle_index] + N_arm)
 
-        middle_next_mean = mu_arm if middle_index == arm_order[arm - 1] - 1 else sorted_mu_above_xi[middle_index + 1]
-        if new_center_point > middle_next_mean and new_center_point < sorted_mu_above_xi[middle_index]:
+        middle_next_mean = (
+            mu_arm
+            if middle_index == arm_order[arm - 1] - 1
+            else sorted_mu_above_xi[middle_index + 1]
+        )
+        if (
+            new_center_point > middle_next_mean
+            and new_center_point < sorted_mu_above_xi[middle_index]
+        ):
             # then we need to test whether the function value is below ft
-            fval = (N_arm + cum_sorted_pulling_above_xi[middle_index]) * new_center_point**2
-            fval -= 2 * (N_arm * mu_arm + cum_sorted_pulling_mu_above_xi[middle_index]) * new_center_point
+            fval = (
+                N_arm + cum_sorted_pulling_above_xi[middle_index]
+            ) * new_center_point**2
+            fval -= (
+                2
+                * (N_arm * mu_arm + cum_sorted_pulling_mu_above_xi[middle_index])
+                * new_center_point
+            )
             fval += N_arm * mu_arm**2 + cum2_sorted_pulling_mu_above_xi[middle_index]
             fval /= 2
             if fval < ft:
@@ -271,3 +301,7 @@ for arm in range(1, K + 1):
         break
 end_time = time()
 print(f"time consumption {end_time- start_time}")
+
+# %% for specific mean reward vector, find it
+# import numpy as np
+# import matplotlib.pyplot as plt
