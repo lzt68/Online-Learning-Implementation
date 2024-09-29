@@ -57,6 +57,10 @@ From the example 1 in the page 3, we know
   Since $i_F(\vec{\mu}')=[K]$, we can conclude $I_t=[K]$​.
 + If $a=\arg\max_{1\leq i\leq K} \hat{\mu}_{i,t}$, then $a\in I_t$.
 
+In the following, we assume $\max_{1\leq a\leq K} \hat{\mu}_{i,t} \geq \mu_0$, $\sum_{i=1}^KN_i(t-1)\frac{(\hat{\mu}_{i,t}-\min\{\mu_0, \hat{\mu}_{i,t}\})^2}{2} \geq \log f(t-1)$ and only consider $a\neq \arg\max_{1\leq i\leq K} \hat{\mu}_{i,t}$.
+
+> The time complexity to check $\max_{1\leq a\leq K} \hat{\mu}_{i,t} \geq \mu_0$ and $\sum_{i=1}^KN_i(t-1)\frac{(\hat{\mu}_{i,t}-\min\{\mu_0, \hat{\mu}_{i,t}\})^2}{2} \geq \log f(t-1)$ are both $\Theta(K)$.
+
 For an arm $a$ which is not the arm with maximum empirical mean reward, we can consider finding a vector $\vec{\mu'}\in S_a:=\left\{\vec{\mu}: a=\arg\max_{1\leq i\leq K}\mu_i, \mu_a > \mu_0\right\}$. If $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2} < \log f(t-1)$, we can conclude $a\in I_t$. Then the problem reduce to the calculation of $\inf_{\vec{\mu'}\in S_a}\sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}$. Notice that
 $$
 \begin{align*}
@@ -74,18 +78,55 @@ We can firstly solve the sub-problem $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} 
 
   > By the fact that $\inf_{\mu_j' \leq \mu_a'}N_j(t-1)\frac{(\mu'_j-\hat{\mu}_{j,t})^2}{2}\geq N_j(t-1)\frac{(\mu'_a-\hat{\mu}_{j,t})^2}{2}$.
 
-Thus, we get $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i\neq a}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$​. 
+Thus, we get $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i\neq a}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$. 
 
-To solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i\neq a}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$, we can see
+The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$​.
 
-+ If $\hat{\mu}_{a,t}\geq \mu_0$, we can conclude the optimal $\mu_a'$ must lie in the interval $(\hat{\mu}_{a,t}, \max_{1\leq i\leq K}\hat{\mu}_{i,t})$. Then we only need to solve $\min_{\mu_a' \geq \hat{\mu}_{a,t}}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$.
-+ If $\hat{\mu}_{a,t} <  \mu_0$, we can conclude the optimal $\mu_a'$ must lie in the interval $(\mu_0, \max_{1\leq i\leq K}\hat{\mu}_{i,t})$. Then we only need to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \mu_0}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$
+> Denote the sorted permutation of $\{\hat{\mu}_{i,t}\}_{i=1}^K$ as $i_1,i_2,\cdots,i_m$, such that
+> $$
+> \hat{\mu}_{i_1, t} \geq \hat{\mu}_{i_2, t}\geq \cdots \geq \hat{\mu}_{i_m, t} > \mu_a'.
+> $$
+> Denote the optimal solution of $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$ is $\mu_a^*$, and denote index $j\in [m]$ as $\hat{\mu}_{i_j}> \mu_a^*\geq \hat{\mu}_{i_{j+1}}$ (we take $\hat{\mu}_{i_{m+1}, t}=\mu_a'$​).
+>
+> To get the minimum point of $N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$ in the interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]$, it is equivalent to find the minimum point in each small interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_m,t})$, $[\hat{\mu}_{i_m,t}, \hat{\mu}_{i_{m-1},t})$, ..., $[\hat{\mu}_{i_3,t}, \hat{\mu}_{i_2,t})$, $[\hat{\mu}_{i_2,t}, \hat{\mu}_{i_1,t}]$, and then take the point with smallest  function value. By the fact that $N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$ is convex function regarding $\mu_a'$ and is also smooth and convex in each small interval, we have the following conclusion 
+> $$
+> \begin{align*}
+> & \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
+> \Rightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
+> \Leftrightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \end{align*}
+> $$
+> If $\mu_a^* = \hat{\mu}_{i_{j+1}}$ for some $j$, then can we conclude $\hat{\mu}_{i_{j+1}}= \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)}$?
+>
+> > 
+>
+> If $\mu_a^* \neq \hat{\mu}_{i_{j+1}}$ forall $j$, by the convexity, we get
+> $$
+> \begin{align*}
+> & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \Rightarrow & \exists j, \mu_a^* =\arg\min_{\mu_a'\in(\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \Rightarrow & \exists j, \mu_a^* =\arg\min_{\mu_a'\in \mathbb{R}} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \Rightarrow &  \exists j, \mu_a^* =\frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)}.
+> \end{align*}
+> $$
+> In conclusion, we prove $\exists j, \mu_a^* =\frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)}$. And there exists a $j$, such that
+> $$
+> \min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\ = \left(N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)\right)(\mu_a^*)^2 -2(\mu_a^*)\left(N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}\right) + \left(N_a(t-1)(\mu_a')^2 + \sum_{l=1}^j N_{i_l}(t-1)(\hat{\mu}_{i_l, t})^2\right)
+> $$
 
-**It seems very hard to derive an explicit minimum point of the function.** But easy to see this is a convex function regarding $\mu_a'$, then we can use binary search to approximate the minimum point.
+Then we can calculate
+
++ $\sum_{l=1}^j N_{i_l}(t-1)$ for all $j$
++ $\sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}$ for all $j$
++ $\sum_{l=1}^j N_{i_l}(t-1)(\hat{\mu}_{i_l, t})^2$ for all $j$
+
+The time complexity of this calculation is $\Theta(K\log K)$. Then for any $a\in [K]$, we can use bisection search to find the corresponding index $j$. The time complexity is $\Theta(\log K)$. 
 
 ## Determine $i_t$
 
-By the sticky pulling rule, we would select $i_t$ as the smallest arm index in the $I_t$. As the only usage of $I_t$ is to find out $i_t$ for the next step, there is no need to figure out all the elements in $I_t$. We should iterate arm 1 to $K$ to find out the arm with smallest index that is in $I_t$.
+By the sticky pulling rule, we would select $i_t$ as the smallest arm index in the $I_t$. As the only usage of $I_t$ is to find out $i_t$ for the next step, there is no need to figure out all the elements in $I_t$. 
+
+In the last section, we firstly calculate some values, whose time complexity is $\Theta(K\log K)$. Then we can iterate all the $a\in [K]$ and apply the bisection search, the total time complexity is $\Theta(K\log K)$. Then, in each round, we need $\Theta(K\log K)$ calculations to determine $i_t$.
 
 ## Specify the value of Constant $C$
 In the Theorem 10, the authors require to take $\beta(t,\delta)=\log\frac{Ct^2}{\delta}$ with $C\geq e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left(\log (Ct^2))^2\log t\right)^K}{t^2}$, without delivering an exact value of $C$. This constant also occurs at the Lemma 14 at page 7, which take $f(t)=Ct^{10}$.
