@@ -49,7 +49,13 @@ class ActionElimination_agent(object):
             lower_bound = self.mean_reward_[self.survive_arms - 1] - C
 
             reference_arm = np.argmax(upper_bound)
-            self.survive_arms = np.array([self.survive_arms[kk] for kk in range(len(self.survive_arms)) if upper_bound[kk] > lower_bound[reference_arm]])
+            self.survive_arms = np.array(
+                [
+                    self.survive_arms[kk]
+                    for kk in range(len(self.survive_arms))
+                    if upper_bound[kk] > lower_bound[reference_arm]
+                ]
+            )
 
             self.pulling_list = list(self.survive_arms)
 
@@ -74,7 +80,9 @@ class UCB_agent(object):
         self.delta = delta
         self.epsilon = epsilon
         self.beta = beta
-        self.alpha = ((2 + beta) / beta) ** 2 * (1 + np.log(2 * np.log(((2 + beta) / beta) ** 2 * K / delta)) / np.log(K / delta))
+        self.alpha = ((2 + beta) / beta) ** 2 * (
+            1 + np.log(2 * np.log(((2 + beta) / beta) ** 2 * K / delta)) / np.log(K / delta)
+        )
 
         # history and status
         self.mean_reward_ = np.zeros(K)
@@ -207,7 +215,7 @@ class LUCB_agent(object):
         return max_mean_reward_index
 
 
-#%% unit test 1, debug ActionElimination_agent
+# %% unit test 1, debug ActionElimination_agent
 # from env import Environment_Gaussian
 
 # K = 6
@@ -228,7 +236,7 @@ class LUCB_agent(object):
 # prediction = agent.predict()
 # print(f"Predicted best arm is {prediction}, round number is {agent.t}")
 
-#%% unit test 2, debug UCB_agent
+# %% unit test 2, debug UCB_agent
 # from env import Environment_Gaussian
 
 # K = 6
@@ -248,7 +256,7 @@ class LUCB_agent(object):
 # prediction = agent.predict()
 # print(f"Predicted best arm is {prediction}, round number is {agent.t}")
 
-#%% unit test 3, debug LUCB_agent
+# %% unit test 3, debug LUCB_agent
 # from env import Environment_Gaussian
 
 # K = 11
