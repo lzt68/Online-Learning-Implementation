@@ -232,18 +232,18 @@ Then we have found a way to derive the explicit projection of vector $w$.
 
 ## Determine whether to stop
 
-The stopping rule in the algorithm is $\exist i\in [K]\cup\{\text{none}\}$, such that $\{\vec{\mu'}: D(N_t,\hat{\mu}_t,\vec{\mu'})\leq \log\frac{Ct^2}{\delta}\} \cap \neg i=\emptyset$.
+The stopping rule in the algorithm is $\exist i\in [K]\cup\{\text{none}\}$, such that $\{\vec{\mu'}: D(N_t,\hat{\mu}_t,\vec{\mu'})\leq \log\frac{Ct^2}{\delta}\} \cap \neg i=\emptyset$​.
 
-+ For the case $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$, denote $a_0$ as the arm with largest empirical mean reward we stop if
-  $$
-  N_{a_0}(t-1)\frac{(\hat{\mu}_{a_0, t}-\mu_0)^2}{2} > \log\frac{Ct^2}{\delta}
-  $$
+A brute-force way is to iterate all the arms $i\in [K]\cup\{\text{none}\}$, and then check whether $\min_{\vec{\mu'}\in \neg i} D(N_t,\hat{\mu}_t,\vec{\mu'}) > \log\frac{Ct^2}{\delta}$ holds, as $\min_{\vec{\mu'}\in \neg i} D(N_t,\hat{\mu}_t,\vec{\mu'}) > \log\frac{Ct^2}{\delta}\Leftrightarrow \{\vec{\mu'}: D(N_t,\hat{\mu}_t,\vec{\mu'})\leq \log\frac{Ct^2}{\delta}\} \cap \neg i=\emptyset$.
+For arm $i=1,2,\cdots, K$
 
-+ For the case $\max_{1\leq a\leq K}\hat{\mu}_{a,t} \leq \mu_0$, we stop if
-  $$
-  N_{a}(t-1)\frac{(\hat{\mu}_{a, t}-\mu_0)^2}{2}>\log\frac{Ct^2}{\delta}
-  $$
-   holds for all $a\in[K]$.
++ If $\hat{\mu}_{i,t} > \mu_0$, we can take $\vec{\mu'}_a=\begin{cases}\mu_0 & a=i\\ \hat{\mu}_{a,t} & a\neq i\end{cases}$ , that means if $N_{i}(t-1)\frac{(\hat{\mu}_{i, t}-\mu_0)^2}{2} > \log\frac{Ct^2}{\delta}$ holds, we can output arm $i$
++ If $\hat{\mu}_{i,t} \leq \mu_0$, we know $\hat{\mu}_t \in \neg i$, further $\min_{\vec{\mu'}\in \neg i} D(N_t,\hat{\mu}_t,\vec{\mu'})=0 < \log\frac{Ct^2}{\delta}$. That means we would not output i.
+
+For arm $i=\text{none}$,
+
++ If $\max_a \hat{\mu}_{a,t} \geq \mu_0$, then $\hat{\mu}_t\in \neg\text{none}$, further $\min_{\vec{\mu'}\in \neg \text{none}} D(N_t,\hat{\mu}_t,\vec{\mu'})=0 < \log\frac{Ct^2}{\delta}$. That means we would not output $\text{none}$.
++ If $\max_a \hat{\mu}_{a,t} < \mu_0$, then $\arg\min_{\vec{\mu'}\in \neg \text{none}} D(N_t,\hat{\mu}_t,\vec{\mu'})=(\mu_0,\mu_0, \cdots,\mu_0)$. If we have $\sum_{a=1}^KN_{a}(t-1)\frac{(\hat{\mu}_{a, t}-\mu_0)^2}{2} > \log\frac{Ct^2}{\delta}$, we can output $\text{none}$.
 
 # File Structure
 
