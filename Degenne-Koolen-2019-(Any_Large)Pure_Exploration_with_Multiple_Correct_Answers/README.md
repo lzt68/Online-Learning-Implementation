@@ -243,7 +243,7 @@ For arm $i=1,2,\cdots, K$
 For arm $i=\text{none}$,
 
 + If $\max_a \hat{\mu}_{a,t} \geq \mu_0$, then $\hat{\mu}_t\in \neg\text{none}$, further $\min_{\vec{\mu'}\in \neg \text{none}} D(N_t,\hat{\mu}_t,\vec{\mu'})=0 < \log\frac{Ct^2}{\delta}$. That means we would not output $\text{none}$.
-+ If $\max_a \hat{\mu}_{a,t} < \mu_0$, then $\arg\min_{\vec{\mu'}\in \neg \text{none}} D(N_t,\hat{\mu}_t,\vec{\mu'})=(\mu_0,\mu_0, \cdots,\mu_0)$. If we have $\sum_{a=1}^KN_{a}(t-1)\frac{(\hat{\mu}_{a, t}-\mu_0)^2}{2} > \log\frac{Ct^2}{\delta}$, we can output $\text{none}$.
++ If $\max_a \hat{\mu}_{a,t} < \mu_0$, then $\min_{\vec{\mu'}\in \neg \text{none}} D(N_t,\hat{\mu}_t,\vec{\mu'})=\min_{a\in [K]} N_t \frac{(\hat{\mu}_{a,t}-\mu_0)^2}{2}$. If we have $\min_{a\in [K]} N_t \frac{(\hat{\mu}_{a,t}-\mu_0)^2}{2} > \log\frac{Ct^2}{\delta}$, we can output $\text{none}$.
 
 # File Structure
 
