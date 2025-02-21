@@ -151,7 +151,7 @@ The algorithm for selecting the first element $i_t$ in each round $t$ is as foll
 
    We need to find an index $j\in [K]$ such that $\hat{\mu}_{i_{j}, t}\leq \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}\leq \hat{\mu}_{i_{j-1}, t}$. Here $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$ increases as $j$​ decreases.
 
-   + If $\hat{\mu}_{i_{j}, t}> \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$, then for any $r<j$, we have $\hat{\mu}_{i_{j}, t}$
+   + If $\hat{\mu}_{i_{j}, t}> \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$, then for any $r<j$, we have $\hat{\mu}_{i_{r}, t}$
    + If $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{j-1}, t}$
 
    This bisection search can be done with complexity $O(\log K)$
