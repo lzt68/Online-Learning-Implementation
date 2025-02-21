@@ -98,18 +98,24 @@ The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}
 > $$
 > \begin{align*}
 > & \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
-> \Rightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
-> \Leftrightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}
+> \Rightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}], \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
+> \Leftrightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}], \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}
 > \end{align*}
 > $$
 > If $\mu_a^* = \hat{\mu}_{i_{j+1}}$ for some $j$, then we can conclude $\hat{\mu}_{i_{j+1}}= \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)}$
 >
-> > Proof is as follows. Denote function $G_j(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}$
+> > Proof is as follows. Denote function $G_r(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^r N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}$. 
 > >
 > > Not hard to see
 > > $$
-> > \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} = \arg\min_{\mu_a'\in \mathbb{R}} G_j(\mu_a').
+> > \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} = \arg\min_{\mu_a'\in \mathbb{R}} G_j(\mu_a'),
 > > $$
+> > and $G_j(\hat{\mu}_{i_{j+1}})=G_{j+1}(\hat{\mu}_{i_{j+1}})$. Since $G_{j+1}(\mu_a')$ is a continuous function, We have
+> > $$
+> > G(\hat{\mu}_{i_{j+1}})=\min_{\mu_a' \geq \mu_0}G(\mu_a') \stackrel{\min_{\mu_a' \geq \mu_0}G(\mu_a')=\min_{r\in[m]} \min_{\mu_a'\in [\hat{\mu}_{i_{r+1}}, \hat{\mu}_{i_{r}}]}G_r(\mu_a') }{\leq} \min_{\mu_a'\in[\hat{\mu}_{i_{j+2}}, \hat{\mu}_{i_{j+1}}]}G_{j+1}(\mu_a')\leq G_{j+1}(\hat{\mu}_{i_{j+1}})
+> > $$
+> > 
+> >
 > > By the fact that $\tilde{G}(\mu_a')$ is a quadratic function regarding $\mu_a'$, we know
 > > $$
 > > \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} \leq \hat{\mu}_{i_{j+1}}=\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} G_j(\mu_a')
