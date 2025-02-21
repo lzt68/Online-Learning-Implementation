@@ -80,7 +80,15 @@ We can firstly solve the sub-problem $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} 
 
 Thus, we get $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i\neq a}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$. 
 
-The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$​.
+The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$​. We are going to prove there exists $j\in[m]$, such that
+$$
+\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
+= \left(N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)\right)(\mu_a^*)^2 -2(\mu_a^*)\left(N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}\right) + \left(N_a(t-1)(\hat{\mu}_{a,t})^2 + \sum_{l=1}^j N_{i_l}(t-1)(\hat{\mu}_{i_l, t})^2\right)
+$$
+and
+$$
+\arg\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')= \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}
+$$
 
 > Denote the sorted permutation of $\{\hat{\mu}_{i,t}\}_{i=1}^K$ as $i_1,i_2,\cdots,i_m$, such that
 > $$
@@ -141,24 +149,43 @@ The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}
 > \min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\ = \left(N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)\right)(\mu_a^*)^2 -2(\mu_a^*)\left(N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}\right) + \left(N_a(t-1)(\hat{\mu}_{a,t})^2 + \sum_{l=1}^j N_{i_l}(t-1)(\hat{\mu}_{i_l, t})^2\right)
 > $$
 
-The algorithm for selecting the first element $i_t$ in each round $t$ is as follows. Given the empirical mean reward vector $\{\hat{\mu}_{a,t}\}_{a=1}^K$,
+By the convexity of function $G(\mu_a')$, we know the optimal point is unique.
+
+The algorithm for calculating the first element $i_t$ in each round $t$ is as follows. Given the empirical mean reward vector $\{\hat{\mu}_{a,t}\}_{a=1}^K$,
 
 1. Sort $\{\hat{\mu}_{a,t}\}_{a=1}^K$ to determine $i_1,i_2,\cdots, i_K$, the time complexity is $O(K\log K)$.
 
 2. Calculate $\sum_{l=1}^j N_{i_l}(t-1)$ for all $j$, $\sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}$ for all $j$, $\sum_{l=1}^j N_{i_l}(t-1)(\hat{\mu}_{i_l, t})^2$ for all $j$. The time complexity is $O(K)$.
 
-3. For $a=1,2,\cdots K$, use bisection search to calculate $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$. 
+3. For $a=1,2,\cdots K$, use bisection search to calculate the optimal solution $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$,
 
    We need to find an index $j\in [K]$ such that $\hat{\mu}_{i_{j}, t}\leq \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}\leq \hat{\mu}_{i_{j-1}, t}$. Here $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$ increases as $j$​ decreases.
 
-   + If $\hat{\mu}_{i_{j}, t}> \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$, then for any $r<j$, we have $\hat{\mu}_{i_{r}, t}$
-   + If $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{j-1}, t}$
+   + If $\hat{\mu}_{i_{r}, t}> \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{r-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{r-1} N_{i_l}(t-1)}$​, 
+     $$
+     \begin{align*}
+     & \hat{\mu}_{i_{r}, t}> \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{r-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{r-1} N_{i_l}(t-1)}\\
+     \Rightarrow & G_r(\mu_a')\text{ is increasing in the interval } [\hat{\mu}_{i_{r}, t}, \hat{\mu}_{i_{r-1}, t}]\\
+     \Rightarrow & G(\mu_a') \text{ is increasing in the interval } [\hat{\mu}_{i_{r}, t}, \hat{\mu}_{i_{1}, t}]\\
+     \Rightarrow & \text{We only needs to focus on index }j\leq r
+     \end{align*}
+     $$
+    + If $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{j-1}, t}$,
+      $$
+      \begin{align*}
+      & \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{j-1}, t}\\
+      \Rightarrow & G_r(\mu_a')\text{ is decreasing in the interval } [\hat{\mu}_{i_{r}, t}, \hat{\mu}_{i_{r-1}, t}]\\
+      \Rightarrow & G(\mu_a')\text{ is decreasing in the interval } [\hat{\mu}_{a, t}, \hat{\mu}_{i_{r-1}, t}]\\
+      \Rightarrow & \text{We only needs to focus on index }j\geq r
+      \end{align*}
+      $$
+      
+   
+   This bisection search can be done with complexity $O(\log K)$​
+   
+   Once we complete the search, we only need $O(1)$ to calculate the $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$, by the pre-calculate value in step 2. And then compare it with $f(t)$
 
-   This bisection search can be done with complexity $O(\log K)$
-
-
-
-The time complexity of this calculation is $\Theta(K\log K)$. Then for any $a\in [K]$, we can use bisection search to find the corresponding index $j$. The time complexity is $\Theta(\log K)$. 
+In total, The time complexity of this calculation is $\Theta(K\log K)$.  The time complexity of running the algorithm in each round is $\Theta(\log K)$. 
 
 ## Determine $i_t$
 
