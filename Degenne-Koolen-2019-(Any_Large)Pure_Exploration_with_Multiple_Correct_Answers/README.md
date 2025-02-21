@@ -84,20 +84,46 @@ The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}
 
 > Denote the sorted permutation of $\{\hat{\mu}_{i,t}\}_{i=1}^K$ as $i_1,i_2,\cdots,i_m$, such that
 > $$
-> \hat{\mu}_{i_1, t} \geq \hat{\mu}_{i_2, t}\geq \cdots \geq \hat{\mu}_{i_m, t} > \mu_a'.
+> \hat{\mu}_{i_1, t} \geq \hat{\mu}_{i_2, t}\geq \cdots \geq \hat{\mu}_{i_m, t} > \hat{\mu}_{a,t}.
 > $$
-> Denote the optimal solution of $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$ is $\mu_a^*$, and denote index $j\in [m]$ as $\hat{\mu}_{i_j}> \mu_a^*\geq \hat{\mu}_{i_{j+1}}$ (we take $\hat{\mu}_{i_{m+1}, t}=\mu_a'$​).
+> Then we turn to find the value of $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^m N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i_l,t} > \mu_a')$. Denote
+> $$
+> G(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^m N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i_l,t} > \mu_a')\\
+> 
+> \mu_a^*=\arg\min_{\mu_a' \geq \mu_0}G(\mu_a')
+> $$
+> and denote index $j\in [m]$ as $\hat{\mu}_{i_j}> \mu_a^*\geq \hat{\mu}_{i_{j+1}}$ (we take $\hat{\mu}_{i_{m+1}, t}=\hat{\mu}_{a,t}$).
 >
-> To get the minimum point of $N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$ in the interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]$, it is equivalent to find the minimum point in each small interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_m,t})$, $[\hat{\mu}_{i_m,t}, \hat{\mu}_{i_{m-1},t})$, ..., $[\hat{\mu}_{i_3,t}, \hat{\mu}_{i_2,t})$, $[\hat{\mu}_{i_2,t}, \hat{\mu}_{i_1,t}]$, and then take the point with smallest  function value. By the fact that $N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$ is convex function regarding $\mu_a'$ and is also smooth and convex in each small interval, we have the following conclusion 
+> To get the minimum point of function $G(\mu_a')$ in the interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]$, it is equivalent to find the minimum point in each small interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_m,t})$, $[\hat{\mu}_{i_m,t}, \hat{\mu}_{i_{m-1},t})$, ..., $[\hat{\mu}_{i_3,t}, \hat{\mu}_{i_2,t})$, $[\hat{\mu}_{i_2,t}, \hat{\mu}_{i_1,t}]$, and then take the point with smallest function value. By the fact that $G(\mu_a')$ is a convex function regarding $\mu_a'$ and is also smooth and convex in each small interval, we have the following conclusion 
 > $$
 > \begin{align*}
 > & \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
 > \Rightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
-> \Leftrightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \Leftrightarrow & \mu_a^*\in [\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}}), \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}
 > \end{align*}
 > $$
-> If $\mu_a^* = \hat{\mu}_{i_{j+1}}$ for some $j$, then can we conclude $\hat{\mu}_{i_{j+1}}= \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)}$?
+> If $\mu_a^* = \hat{\mu}_{i_{j+1}}$ for some $j$, then we can conclude $\hat{\mu}_{i_{j+1}}= \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)}$
 >
+> > Proof is as follows. Denote function $G_j(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^j N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}$
+> >
+> > Not hard to see
+> > $$
+> > \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} = \arg\min_{\mu_a'\in \mathbb{R}} G_j(\mu_a').
+> > $$
+> > By the fact that $\tilde{G}(\mu_a')$ is a quadratic function regarding $\mu_a'$, we know
+> > $$
+> > \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} \leq \hat{\mu}_{i_{j+1}}=\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1}}, \hat{\mu}_{i_{j}})} G_j(\mu_a')
+> > $$
+> > Then we turn to prove $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} < \hat{\mu}_{i_{j+1}}$ is impossible. Proof by contradiction, if $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} < \hat{\mu}_{i_{j+1}}$ holds, then we can conclude
+> > $$
+> > \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j+1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j+1} N_{i_l}(t-1)} \leq \frac{N_a(t-1)\mu_a' + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)} < \hat{\mu}_{i_{j+1}}
+> > $$
+> > Since $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j+1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j+1} N_{i_l}(t-1)}= \arg\min_{\mu_a'\in \mathbb{R}} G_{j+1}(\mu_a')$, we have
+> > $$
+> > G_{j+1}\left(\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j+1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j+1} N_{i_l}(t-1)}\right)\leq \min_{\mu_a'\in[\hat{\mu}_{i_{j+2}}, \hat{\mu}_{i_{j+1}})}G_{j+1}(\mu_a')
+> > $$
+> > 
+> >
 > > 
 >
 > If $\mu_a^* \neq \hat{\mu}_{i_{j+1}}$ forall $j$, by the convexity, we get
