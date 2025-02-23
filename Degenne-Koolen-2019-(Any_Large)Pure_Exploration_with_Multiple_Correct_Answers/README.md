@@ -11,7 +11,19 @@ For convenience, here we consider **Any Large Problem**, which is essentially th
 
 We want to design an algorithm which take confidence level $\delta$ as input, such that for any instance $\nu$, the algorithm can achieve success with probability $1-\delta$, while consuming as small pulling times as possible.
 
-We only work on instances whose maximum mean reward is not $\mu_0$​, and unit variance Gaussian Distribution.
+We only work on instances whose maximum mean reward is not $\mu_0$​​, and unit variance Gaussian Distribution.
+
+## File Structure
+
++ "Source": the source file
+  + agent.py: We implement three different versions of the algorithm Sticky-TaS, which are Sticky_TaS_old,  Sticky_TaS, Sticky_TaS_fast.
+    The behavior of these implementations are the same, while the running efficiency of Sticky_TaS_fast is the best and Sticky_TaS_old is the worse.
+    The main difference is how to figure out the first element in $I_t$. Sticky_TaS_fast implements an algorithm that can achieves $O(K\log K)$ time complexity in each round.
+  + env.py: Define the Gaussian Instance.
+
+
+
+Following are the supportive proof for the implementation Sticky_TaS_fast.
 
 # Supplement Details for the Algorithm
 
@@ -312,5 +324,5 @@ For arm $i=\text{none}$,
 + If $\max_a \hat{\mu}_{a,t} \geq \mu_0$, then $\hat{\mu}_t\in \neg\text{none}$, further $\min_{\vec{\mu'}\in \neg \text{none}} D(N_t,\hat{\mu}_t,\vec{\mu'})=0 < \log\frac{Ct^2}{\delta}$. That means we would not output $\text{none}$.
 + If $\max_a \hat{\mu}_{a,t} < \mu_0$, then $\min_{\vec{\mu'}\in \neg \text{none}} D(N_t,\hat{\mu}_t,\vec{\mu'})=\min_{a\in [K]} N_t \frac{(\hat{\mu}_{a,t}-\mu_0)^2}{2}$. If we have $\min_{a\in [K]} N_t \frac{(\hat{\mu}_{a,t}-\mu_0)^2}{2} > \log\frac{Ct^2}{\delta}$, we can output $\text{none}$.
 
-# File Structure
+
 

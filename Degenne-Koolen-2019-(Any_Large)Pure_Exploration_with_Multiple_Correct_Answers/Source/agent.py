@@ -45,7 +45,7 @@ def gss_value(f, a, b, ftoloerance=1e-6):
 
 class Sticky_TaS_old(object):
     # Sticky Track-and-Stop
-    def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5) -> None:
+    def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5, logC=None, log1_over_delta=None) -> None:
         self.delta = delta
         self.K = K
         self.xi = xi
@@ -59,9 +59,13 @@ class Sticky_TaS_old(object):
 
         self.pulling_list = [kk for kk in range(1, K + 1)]
 
-        C = 10  # I am not sure C=10 is enough to fulfill the requirement
-        self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
-        self.function_f = lambda x: np.log(C) + 10 * np.log(x)
+        if logC is None or log1_over_delta is None:
+            C = 10  # I am not sure C=10 is enough to fulfill the requirement
+            self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
+            self.function_f = lambda x: np.log(C) + 10 * np.log(x)
+        else:
+            self.beta = lambda x: logC + 2 * np.log(x) + log1_over_delta
+            self.function_f = lambda x: logC + 10 * np.log(x)
 
         self.stop = False
         self.count_get_it = 0
@@ -197,7 +201,7 @@ class Sticky_TaS_old(object):
 
 class Sticky_TaS(object):
     # Sticky Track-and-Stop
-    def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5) -> None:
+    def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5, logC=None, log1_over_delta=None) -> None:
         self.delta = delta
         self.K = K
         self.xi = xi
@@ -211,9 +215,13 @@ class Sticky_TaS(object):
 
         self.pulling_list = [kk for kk in range(1, K + 1)]
 
-        C = 10  # I am not sure C=10 is enough to fulfill the requirement
-        self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
-        self.function_f = lambda x: np.log(C) + 10 * np.log(x)
+        if logC is None or log1_over_delta is None:
+            C = 10  # I am not sure C=10 is enough to fulfill the requirement
+            self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
+            self.function_f = lambda x: np.log(C) + 10 * np.log(x)
+        else:
+            self.beta = lambda x: logC + 2 * np.log(x) + log1_over_delta
+            self.function_f = lambda x: logC + 10 * np.log(x)
 
         self.stop = False
         self.count_get_it = 0
@@ -311,34 +319,44 @@ class Sticky_TaS(object):
         best_emp = hatmu[best_emp_arm - 1]
 
         for arm in range(1, best_emp_arm + 1):
-            if hatmu[arm - 1] > self.xi:
-                hat_mu_arm_t = hatmu[arm - 1]
-                N_arm_t = pulling[arm - 1]
-                index_arm = hatmu > hat_mu_arm_t
-                mu_temp = hatmu[index_arm]
-                Nt = pulling[index_arm]
-                f = lambda x: (N_arm_t * (x - hat_mu_arm_t) ** 2 + np.sum(Nt * (np.maximum(mu_temp - x, 0) ** 2))) / 2
-                optx, fval = gss_value(f, hatmu[arm - 1], best_emp)
-                if fval <= ft:
-                    return arm, optx, fval
-            else:
-                hat_mu_arm_t = hatmu[arm - 1]
-                N_arm_t = pulling[arm - 1]
-                index_better_than_arm = hatmu > self.xi
-                mu_temp = hatmu[index_better_than_arm]
-                Nt = pulling[index_better_than_arm]
+            hat_mu_arm_t = hatmu[arm - 1]
+            N_arm_t = pulling[arm - 1]
+            index_arm = hatmu > hat_mu_arm_t
+            mu_temp = hatmu[index_arm]
+            Nt = pulling[index_arm]
+            f = lambda x: (N_arm_t * (x - hat_mu_arm_t) ** 2 + np.sum(Nt * (np.maximum(mu_temp - x, 0) ** 2))) / 2
+            # optx, fval = gss_value(f, hatmu[arm - 1], best_emp)
+            optx, fval = gss_value(f, self.xi, best_emp)
+            if fval <= ft:
+                return arm, optx, fval
+            # if hatmu[arm - 1] > self.xi:
+            #     hat_mu_arm_t = hatmu[arm - 1]
+            #     N_arm_t = pulling[arm - 1]
+            #     index_arm = hatmu > hat_mu_arm_t
+            #     mu_temp = hatmu[index_arm]
+            #     Nt = pulling[index_arm]
+            #     f = lambda x: (N_arm_t * (x - hat_mu_arm_t) ** 2 + np.sum(Nt * (np.maximum(mu_temp - x, 0) ** 2))) / 2
+            #     optx, fval = gss_value(f, hatmu[arm - 1], best_emp)
+            #     if fval <= ft:
+            #         return arm, optx, fval
+            # else:
+            #     hat_mu_arm_t = hatmu[arm - 1]
+            #     N_arm_t = pulling[arm - 1]
+            #     index_better_than_arm = hatmu > self.xi
+            #     mu_temp = hatmu[index_better_than_arm]
+            #     Nt = pulling[index_better_than_arm]
 
-                f = (
-                    lambda x: (
-                        N_arm_t * (x - hat_mu_arm_t) ** 2
-                        + np.sum(Nt * (np.maximum(mu_temp - x, 0) ** 2))
-                        # np.sum(Nt_temp * (np.maximum(mu_temp - x, 0) ** 2))
-                    )
-                    / 2
-                )
-                optx, fval = gss_value(f, hatmu[arm - 1], best_emp)
-                if fval <= ft:
-                    return arm, optx, fval
+            #     f = (
+            #         lambda x: (
+            #             N_arm_t * (x - hat_mu_arm_t) ** 2
+            #             + np.sum(Nt * (np.maximum(mu_temp - x, 0) ** 2))
+            #             # np.sum(Nt_temp * (np.maximum(mu_temp - x, 0) ** 2))
+            #         )
+            #         / 2
+            #     )
+            #     optx, fval = gss_value(f, hatmu[arm - 1], best_emp)
+            #     if fval <= ft:
+            #         return arm, optx, fval
 
     def Get_it(self, hatmu: np.ndarray, pulling: np.ndarray):
         self.count_get_it += 1
@@ -362,7 +380,7 @@ class Sticky_TaS(object):
 
 class Sticky_TaS_fast(object):
     # Sticky Track-and-Stop
-    def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5) -> None:
+    def __init__(self, K: int, delta: float = 0.1, xi: float = 0.5, logC=None, log1_over_delta=None) -> None:
         self.delta = delta
         self.K = K
         self.xi = xi
@@ -376,9 +394,13 @@ class Sticky_TaS_fast(object):
 
         self.pulling_list = [kk for kk in range(1, K + 1)]
 
-        C = 10  # I am not sure C=10 is enough to fulfill the requirement
-        self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
-        self.function_f = lambda x: np.log(C) + 10 * np.log(x)
+        if logC is None or log1_over_delta is None:
+            C = 10  # I am not sure C=10 is enough to fulfill the requirement
+            self.beta = lambda x: np.log(C) + 2 * np.log(x) + np.log(1 / delta)
+            self.function_f = lambda x: np.log(C) + 10 * np.log(x)
+        else:
+            self.beta = lambda x: logC + 2 * np.log(x) + log1_over_delta
+            self.function_f = lambda x: logC + 10 * np.log(x)
 
         self.stop = False
         self.count_get_it = 0
@@ -495,23 +517,29 @@ class Sticky_TaS_fast(object):
 
             # use bisection to search for the optimal center point
             leftindex = 0
-            rightindex = arm_order[arm - 1] - 1
+            if hatmu[arm - 1] >= self.xi:
+                rightindex = arm_order[arm - 1] - 1
+            else:
+                rightindex = len(center_point) - 1
             while True:
                 middle_index = (leftindex + rightindex) // 2
                 new_center_point = (
                     center_point[middle_index] * cum_sorted_pulling_above_xi[middle_index] + mu_arm * N_arm
                 ) / (cum_sorted_pulling_above_xi[middle_index] + N_arm)
                 middle_next_mean = (
-                    mu_arm if middle_index == arm_order[arm - 1] - 1 else sorted_mu_above_xi[middle_index + 1]
+                    mu_arm if middle_index == len(center_point) - 1 else sorted_mu_above_xi[middle_index + 1]
                 )
                 if new_center_point > middle_next_mean and new_center_point < sorted_mu_above_xi[middle_index]:
-                    # then we need to test whether the function value is below ft
-                    fval = (N_arm + cum_sorted_pulling_above_xi[middle_index]) * new_center_point**2
-                    fval -= 2 * (N_arm * mu_arm + cum_sorted_pulling_mu_above_xi[middle_index]) * new_center_point
+                    # we need to firstly calculate $\max\{\xi, new_center_point\}$
+                    mu_a_star = np.maximum(self.xi, new_center_point)
+
+                    # test whether the function value at mu_a_star is below ft
+                    fval = (N_arm + cum_sorted_pulling_above_xi[middle_index]) * mu_a_star**2
+                    fval -= 2 * (N_arm * mu_arm + cum_sorted_pulling_mu_above_xi[middle_index]) * mu_a_star
                     fval += N_arm * mu_arm**2 + cum2_sorted_pulling_mu_above_xi[middle_index]
                     fval /= 2
                     if fval < ft:
-                        return arm, new_center_point, fval
+                        return arm, mu_a_star, fval
                     break
                 elif new_center_point < middle_next_mean:
                     leftindex = middle_index + 1
@@ -654,7 +682,7 @@ class Sticky_TaS_fast(object):
 #         stop_time = agent.t
 # print(f"output arm is {output_arm}, output time is {stop_time}")
 
-# %% unit test 2, compare the running speed of Sticky_TaS and Sticky_TaS_old
+# %% unit test 2, compare the running speed of Sticky_TaS and Sticky_TaS_fast
 # from env import Environment_Gaussian
 # from tqdm import tqdm
 # from time import time
@@ -669,30 +697,27 @@ class Sticky_TaS_fast(object):
 
 # K = 100
 # xi = 0.5
-# Delta = 50
-# rlist = np.ones(K) * xi
-# rlist[1:K] = 0
-# rlist[0] = xi + Delta
+# Delta = 4
+# rlist = np.zeros(K)
+# rlist[-1] = xi + Delta
 
-# delta = 0.01
-# n_exp = 1
+# delta = 0.0001
+# n_exp = 100
 
-# # for alg_class in [Sticky_TaS_old, Sticky_TaS]:
-# # for alg_class in [Sticky_TaS_fast, Sticky_TaS]:
-# for alg_class in [Sticky_TaS_fast]:
+# for alg_class in [Sticky_TaS_fast, Sticky_TaS, Sticky_TaS_old]:
 #     stop_time_ = np.zeros(n_exp)
 #     output_arm_ = list()
 #     correctness_ = np.ones(n_exp)
 #     exectution_time_ = np.zeros(n_exp)
 #     # for exp_id in tqdm(range(n_exp)):
-#     for exp_id in range(n_exp):
+#     for exp_id in tqdm(range(n_exp)):
 #         rlist_temp = rlist[::-1].copy()
 #         # np.random.seed(exp_id)
 #         # np.random.shuffle(rlist_temp)
 #         answer_set = list(np.where(rlist_temp > xi)[0] + 1)
 
 #         env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=exp_id)
-#         agent = alg_class(K=K, delta=delta, xi=xi)
+#         agent = alg_class(K=K, delta=delta, xi=xi, logC=1, log1_over_delta=100)
 
 #         time_start = time()
 #         while not agent.stop:
@@ -702,8 +727,8 @@ class Sticky_TaS_fast(object):
 #             if output_arm is not None:
 #                 output_arm_.append(output_arm)
 #                 break
-#             if agent.t % 10000 == 0:
-#                 print(agent.t)
+#             # if agent.t % 10000 == 0:
+#             #     print(agent.t)
 #         time_end = time()
 #         stop_time_[exp_id] = agent.t
 #         exectution_time_[exp_id] = time_end - time_start
@@ -805,89 +830,31 @@ class Sticky_TaS_fast(object):
 #     print(f"execution time is {mean_execution_time}")
 
 # %% unit test 4, check whether the actions are the same between Sticky_TaS_fast, Sticky_TaS
-from env import Environment_Gaussian
-from tqdm import tqdm
-from time import time
-import matplotlib.pyplot as plt
-
-random_seed = 12345
-
-K = 1000
-xi = 0.5
-Delta = 5
-rlist = np.ones(K) * xi
-# rlist[1:K] = xi + Delta
-rlist[K - 1] = xi + Delta
-
-delta = 0.01
-n_exp = 1
-
-
-# rlist_temp = rlist[::-1].copy()
-rlist_temp = rlist.copy()
-# np.random.seed(exp_id)
-# np.random.shuffle(rlist_temp)
-answer_set = list(np.where(rlist_temp > xi)[0] + 1)
-
-env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=random_seed)
-agent_sas = Sticky_TaS(K=K, delta=delta, xi=xi)
-agent_sas_fast = Sticky_TaS_fast(K=K, delta=delta, xi=xi)
-
-len_statistic = K * 10
-execution_time_fast = np.zeros(len_statistic)
-execution_time = np.zeros(len_statistic)
-
-count_round = 0
-while (not agent_sas.stop) or (not agent_sas_fast.stop):
-    arm_sas_fast = agent_sas_fast.action()
-    arm_sas = agent_sas.action()
-    assert arm_sas_fast == arm_sas, f"round {agent_sas.t} inconsistent"
-    assert agent_sas.stop == agent_sas_fast.stop, f"round {agent_sas.t} inconsistent"
-
-    reward = env.response(arm_sas_fast)
-
-    agent_sas.observe(reward)
-    agent_sas_fast.observe(reward)
-
-    # if agent_sas_fast.t <= len_statistic:
-    #     execution_time_fast[count_round] = end_time_fast - start_time_fast
-    #     execution_time[count_round] = end_time - start_time
-    #     count_round += 1
-    # else:
-    #     break
-
-print("fast:", np.mean(execution_time_fast))
-print("old:", np.mean(execution_time))
-# plt.figure(1)
-# plt.plot(
-#     range(2 * K, len_statistic),
-#     execution_time_fast[2 * K : len_statistic],
-#     label="fast",
-# )
-# plt.plot(range(2 * K, len_statistic), execution_time[2 * K : len_statistic], label="normal")
-# plt.legend()
-# plt.show()
-
-# %% unit test 5, check whether the actions from the Sticky_TaS_fast, Sticky_TaS are the same
 # from env import Environment_Gaussian
+# from tqdm import tqdm
+# from time import time
+# import matplotlib.pyplot as plt
 
-# K = 100
+# random_seed = 12345
+
+# K = 1000
 # xi = 0.5
-# Delta = 0.25
+# Delta = 5
 # rlist = np.ones(K) * xi
-# rlist[1:K] = xi + Delta
-# rlist[0] = 1.0
+# # rlist[1:K] = xi + Delta
+# rlist[K - 1] = xi + Delta
 
 # delta = 0.01
 # n_exp = 1
 
 
-# rlist_temp = rlist[::-1].copy()
+# # rlist_temp = rlist[::-1].copy()
+# rlist_temp = rlist.copy()
 # # np.random.seed(exp_id)
 # # np.random.shuffle(rlist_temp)
 # answer_set = list(np.where(rlist_temp > xi)[0] + 1)
 
-# env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=0)
+# env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=random_seed)
 # agent_sas = Sticky_TaS(K=K, delta=delta, xi=xi)
 # agent_sas_fast = Sticky_TaS_fast(K=K, delta=delta, xi=xi)
 
@@ -906,6 +873,68 @@ print("old:", np.mean(execution_time))
 
 #     agent_sas.observe(reward)
 #     agent_sas_fast.observe(reward)
+
+#     # if agent_sas_fast.t <= len_statistic:
+#     #     execution_time_fast[count_round] = end_time_fast - start_time_fast
+#     #     execution_time[count_round] = end_time - start_time
+#     #     count_round += 1
+#     # else:
+#     #     break
+
+# print("fast:", np.mean(execution_time_fast))
+# print("old:", np.mean(execution_time))
+# # plt.figure(1)
+# # plt.plot(
+# #     range(2 * K, len_statistic),
+# #     execution_time_fast[2 * K : len_statistic],
+# #     label="fast",
+# # )
+# # plt.plot(range(2 * K, len_statistic), execution_time[2 * K : len_statistic], label="normal")
+# # plt.legend()
+# # plt.show()
+
+# %% unit test 5, check whether the actions from the Sticky_TaS_fast, Sticky_TaS, Sticky_TaS_old, are the same
+# from env import Environment_Gaussian
+
+# K = 100
+# xi = 0.5
+# Delta = 4
+# rlist = np.zeros(K)
+# rlist[-1] = xi + Delta
+
+# delta = 0.01
+
+
+# # rlist_temp = rlist[::-1].copy()
+# rlist_temp = rlist.copy()
+# # np.random.seed(exp_id)
+# # np.random.shuffle(rlist_temp)
+# answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+
+# env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=0)
+# agent_sas = Sticky_TaS(K=K, delta=delta, xi=xi, logC=1, log1_over_delta=1000)
+# agent_sas_fast = Sticky_TaS_fast(K=K, delta=delta, xi=xi, logC=1, log1_over_delta=1000)
+# agent_sas_old = Sticky_TaS_old(K=K, delta=delta, xi=xi, logC=1, log1_over_delta=1000)
+
+# len_statistic = K * 10
+# execution_time_fast = np.zeros(len_statistic)
+# execution_time = np.zeros(len_statistic)
+
+# count_round = 0
+# while (not agent_sas.stop) or (not agent_sas_fast.stop):
+#     arm_sas_fast = agent_sas_fast.action()
+#     arm_sas = agent_sas.action()
+#     arm_sas_old = agent_sas_old.action()
+#     assert arm_sas_fast == arm_sas, f"round {agent_sas.t} inconsistent"
+#     assert arm_sas_old == arm_sas, f"round {agent_sas.t} inconsistent"
+#     assert agent_sas.stop == agent_sas_fast.stop, f"round {agent_sas.t} inconsistent"
+#     assert agent_sas_old.stop == agent_sas_fast.stop, f"round {agent_sas.t} inconsistent"
+
+#     reward = env.response(arm_sas_fast)
+
+#     agent_sas.observe(reward)
+#     agent_sas_fast.observe(reward)
+#     agent_sas_old.observe(reward)
 
 #     if agent_sas.t % 10000 == 0:
 #         print(agent_sas.t)
