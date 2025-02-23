@@ -104,7 +104,7 @@ class Sticky_TaS_old(object):
         if max_mean > self.xi:
             a0 = np.argmax(self.mean_reward_) + 1
             beta_t = self.beta(self.t - 1)
-            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[arm - 1] - self.xi) ** 2 / 2
+            condition = self.pulling_times_[a0 - 1] * (self.mean_reward_[a0 - 1] - self.xi) ** 2 / 2
             if beta_t < condition:
                 self.stop = True
                 return a0
@@ -682,7 +682,7 @@ class Sticky_TaS_fast(object):
 #         stop_time = agent.t
 # print(f"output arm is {output_arm}, output time is {stop_time}")
 
-# %% unit test 2, compare the running speed of Sticky_TaS and Sticky_TaS_fast
+# %% unit test 2, compare the running speed of Sticky_TaS, Sticky_TaS_old, Sticky_TaS_fast
 # from env import Environment_Gaussian
 # from tqdm import tqdm
 # from time import time
@@ -704,6 +704,7 @@ class Sticky_TaS_fast(object):
 # delta = 0.0001
 # n_exp = 100
 
+# result_dict = dict()
 # for alg_class in [Sticky_TaS_fast, Sticky_TaS, Sticky_TaS_old]:
 #     stop_time_ = np.zeros(n_exp)
 #     output_arm_ = list()
@@ -712,6 +713,7 @@ class Sticky_TaS_fast(object):
 #     # for exp_id in tqdm(range(n_exp)):
 #     for exp_id in tqdm(range(n_exp)):
 #         rlist_temp = rlist[::-1].copy()
+#         # rlist_temp = rlist[::-1].copy()
 #         # np.random.seed(exp_id)
 #         # np.random.shuffle(rlist_temp)
 #         answer_set = list(np.where(rlist_temp > xi)[0] + 1)
@@ -727,8 +729,6 @@ class Sticky_TaS_fast(object):
 #             if output_arm is not None:
 #                 output_arm_.append(output_arm)
 #                 break
-#             # if agent.t % 10000 == 0:
-#             #     print(agent.t)
 #         time_end = time()
 #         stop_time_[exp_id] = agent.t
 #         exectution_time_[exp_id] = time_end - time_start
@@ -737,12 +737,13 @@ class Sticky_TaS_fast(object):
 #     mean_stop_time = np.mean(stop_time_)
 #     mean_success = np.mean(correctness_)
 #     mean_execution_time = np.mean(exectution_time_)
+
 #     algname = type(agent).__name__
+#     result_dict[algname] = stop_time_
 #     print(f"For algorithm {algname}, ")
 #     print(f"mean stop time is {mean_stop_time}")
 #     print(f"correctness rate is {mean_success}")
 #     print(f"execution time is {mean_execution_time}")
-
 # %% unit test 3, how would the permutaion of arms affect the pulling complexity?
 # the gap can be 10 times larger
 # from env import Environment_Gaussian
@@ -901,14 +902,13 @@ class Sticky_TaS_fast(object):
 # Delta = 4
 # rlist = np.zeros(K)
 # rlist[-1] = xi + Delta
+# delta = 0.0001
 
-# delta = 0.01
 
-
-# # rlist_temp = rlist[::-1].copy()
-# rlist_temp = rlist.copy()
-# # np.random.seed(exp_id)
-# # np.random.shuffle(rlist_temp)
+# rlist_temp = rlist[::-1].copy()
+# # rlist_temp = rlist.copy()
+# # # np.random.seed(exp_id)
+# # # np.random.shuffle(rlist_temp)
 # answer_set = list(np.where(rlist_temp > xi)[0] + 1)
 
 # env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=0)
@@ -921,7 +921,7 @@ class Sticky_TaS_fast(object):
 # execution_time = np.zeros(len_statistic)
 
 # count_round = 0
-# while (not agent_sas.stop) or (not agent_sas_fast.stop):
+# while (not agent_sas.stop) or (not agent_sas_fast.stop) or (not agent_sas_old.stop):
 #     arm_sas_fast = agent_sas_fast.action()
 #     arm_sas = agent_sas.action()
 #     arm_sas_old = agent_sas_old.action()
