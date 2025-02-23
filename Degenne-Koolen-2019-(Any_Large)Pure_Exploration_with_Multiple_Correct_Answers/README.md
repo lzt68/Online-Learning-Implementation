@@ -80,71 +80,73 @@ We can firstly solve the sub-problem $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} 
 
 Thus, we get $\inf_{\mu_a'\geq \mu_i', \forall i\neq a} \sum_{i=1}^K N_i(t-1)\frac{(\mu'_i-\hat{\mu}_{i,t})^2}{2}=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i\neq a}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$. 
 
-The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$​. We are going to prove there exists $j\in[m]$, such that
-$$
-\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
-= \left(N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)\right)(\mu_a^*)^2 -2(\mu_a^*)\left(N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}\right) + \left(N_a(t-1)(\hat{\mu}_{a,t})^2 + \sum_{l=1}^j N_{i_l}(t-1)(\hat{\mu}_{i_l, t})^2\right)
-$$
-and
-$$
-\arg\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')= \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}
-$$
 
-> Denote the sorted permutation of $\{\hat{\mu}_{i,t}\}_{i=1}^K$ as $i_1,i_2,\cdots,i_m$, such that
-> $$
-> \hat{\mu}_{i_1, t} \geq \hat{\mu}_{i_2, t}\geq \cdots \geq \hat{\mu}_{i_m, t} > \hat{\mu}_{a,t}.
-> $$
-> Then we turn to find the value of $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^m N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i_l,t} > \mu_a')$. Denote
-> $$
-> G(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^m N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i_l,t} > \mu_a')\\
-> 
-> \mu_a^*=\arg\min_{\mu_a' \geq \mu_0}G(\mu_a')
-> $$
+
+The remaining task is to solve $\min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')$. Denote 
+
++ sorted permutation of $\{\hat{\mu}_{i,t}\}_{i=1}^K$ as $i_1,i_2,\cdots,i_m$, such that $\hat{\mu}_{i_1, t} \geq \hat{\mu}_{i_2, t}\geq \cdots \geq \hat{\mu}_{i_m, t} > \hat{\mu}_{a,t}$.
+
++ $G(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^m N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i_l,t} > \mu_a')$. We need to solve $\min_{\mu_a' \geq \mu_0} G(\mu_a') $.
+
++ $\mu_a^*=\arg\min_{\mu_a' \geq \mu_0}G(\mu_a')$, $\tilde{\mu}^*_a=\arg\min_{\mu_a'\geq \hat{\mu}_{a,t}} G(\mu_a')$
+  Since $\arg\min_{\mu_a'\in\mathbb{R}} G(\mu_a') \in [\hat{\mu}_{a,t}, \hat{\mu}_{i_1, t}]$, we can conclude $\arg\min_{\mu_a'\in\mathbb{R}} G(\mu_a')=\tilde{\mu}^*$
+
+  + If $\hat{\mu}_{a,t} > \mu_0$, we know $\mu_a^*=\tilde{\mu}^*_a$, as $\arg\min_{\mu_a' \geq \mu_0}G(\mu_a')\geq \arg\min_{\mu_a'\geq \hat{\mu}_{a,t}} G(\mu_a')$
+  + If $\hat{\mu}_{a,t} \leq \mu_0$, we know $\mu_a^*=\max\{\mu_0, \tilde{\mu}^*_a\}$. The reason is function $G(\mu_a')$ is a convex function regarding $\mu_a'$. Then $G(\mu_a')$ is decreasing in the interval $(-\infty, \tilde{\mu}^*)$, while increasing in the interval $(\tilde{\mu}^*, +\infty)$.
+    + If $\mu_0\leq \tilde{\mu}^*$, $\arg\min_{\mu_a' \geq \mu_0}G(\mu_a')$ is indeed the global minimum point of $G(\mu_a')$, which is $\tilde{\mu}^*$
+    + If $\mu_0> \tilde{\mu}^*$, $G(\mu_a')$ is increasing in the interval $(\mu_0, +\infty)$. Then $\arg\min_{\mu_a' \geq \mu_0}G(\mu_a')=\mu_0$.
+
+  That means to calculate $\mu_a^*$, suffice to calculate $\tilde{\mu}^*_a$, and then we can take $\mu_a^*=\max\{\tilde{\mu}_a^*, \mu_0\}$.
+
++ Denote ${c\mu}_j:=\frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j} N_{i_l}(t-1)}$ for all $j\in [m]$
+
+We are going to prove $\tilde{\mu}_a^*={c\mu}_j$ for some $j\in [m]$.
+
 > To get the minimum point of function $G(\mu_a')$ in the interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]$, it is equivalent to find the minimum point in each small interval $[\hat{\mu}_{a,t}, \hat{\mu}_{i_m,t})$, $[\hat{\mu}_{i_m,t}, \hat{\mu}_{i_{m-1},t})$, ..., $[\hat{\mu}_{i_3,t}, \hat{\mu}_{i_2,t})$, $[\hat{\mu}_{i_2,t}, \hat{\mu}_{i_1,t}]$, and then take the point with smallest function value. By the fact that $G(\mu_a')$ is a convex function regarding $\mu_a'$ and is also smooth and convex in each small interval, we have the following conclusion 
 > $$
 > \begin{align*}
-> & \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
-> \Rightarrow & \exists j, \mu_a^*\in [\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}], \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
-> \Leftrightarrow & \exists j, \mu_a^*\in [\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}], \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}
+> & \tilde{\mu}_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{a,t}, \hat{\mu}_{i_1,t}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
+> \Rightarrow & \exists j, \tilde{\mu}_a^*\in [\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}], \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\
+> \Leftrightarrow & \exists j, \tilde{\mu}_a^*\in [\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}], \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j}}, \hat{\mu}_{i_{j-1}}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}
 > \end{align*}
 > $$
-> If $\exists j\in[m]$,  $\mu_a^* = \hat{\mu}_{i_{j}}$, then we can conclude $\hat{\mu}_{i_{j}}= \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$.
->
-> > Proof is as follows. Denote function $G_r(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{r-1} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}$ for $r\in[m]$. We have $G(\mu_a')=G_r(\mu_a')$ holds for all $\mu_a'\in[\hat{\mu}_{i_r}, \hat{\mu}_{i_{r-1}}]$ (we take $\hat{\mu}_{i_{0}}=+\infty$)
+> If $\exists j\in[m]$,  $\tilde{\mu}_a^* = \hat{\mu}_{i_{j},t}$, then we can conclude $\tilde{\mu}_a^* =\hat{\mu}_{i_{j},t}= \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$.
+> 
+> > Proof is as follows. Denote function $G_r(\mu_a')=N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{r} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}$ for $r\in[m]$. We have $G(\mu_a')=G_r(\mu_a')$ holds for all $\mu_a'\in[\hat{\mu}_{i_{r+1},t}, \hat{\mu}_{i_{r},t}]$ (we take $\hat{\mu}_{i_{m+1},t}=\hat{\mu}_{a,t}$)
 > >
 > > Not hard to see
 > > $$
-> > \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{r-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{r-1} N_{i_l}(t-1)} = \arg\min_{\mu_a'\in \mathbb{R}} G_r(\mu_a'),
+> > \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{r} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{r} N_{i_l}(t-1)} = \arg\min_{\mu_a'\in \mathbb{R}} G_r(\mu_a'),
 > > $$
-> > holds for all $r\in [m]$. Since $\mu_a^* = \hat{\mu}_{i_{j}}=\arg\min_{\mu_a' \geq \mu_0}G(\mu_a')$, we can conclude
+> > holds for all $r\in [m]$. Since $\tilde{\mu}_a^* = \hat{\mu}_{i_{j},t}=\arg\min_{\mu_a' \geq \hat{\mu}_{a,t}}G(\mu_a')$, we can conclude
 > > $$
-> > G(\hat{\mu}_{i_{j}})=G_j(\hat{\mu}_{i_{j}})\leq \min_{\mu_a'\in[\hat{\mu}_{i_{j},t}, \hat{\mu}_{i_{j-1},t}]} G_{j}(\mu_a')\\
-> > G(\hat{\mu}_{i_{j}})=G_{j+1}(\hat{\mu}_{i_{j}})\leq \min_{\mu_a'\in[\hat{\mu}_{i_{j+1},t}, \hat{\mu}_{i_{j},t}]} G_{j+1}(\mu_a')\\
+> > G(\hat{\mu}_{i_{j},t})=G_j(\hat{\mu}_{i_{j},t})\leq \min_{\mu_a'\in[\hat{\mu}_{i_{j+1},t}, \hat{\mu}_{i_{j},t}]} G_{j}(\mu_a')\\
+>> G(\hat{\mu}_{i_{j},t})=G_{j+1}(\hat{\mu}_{i_{j},t})\leq \min_{\mu_a'\in[\hat{\mu}_{i_{j+2},t}, \hat{\mu}_{i_{j+1},t}]} G_{j+1}(\mu_a')\\
 > > $$
 > > which means
 > > $$
-> > \hat{\mu}_{i_{j}}=\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j},t}, \hat{\mu}_{i_{j-1},t}]} G_{j}(\mu_a')=\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1},t}, \hat{\mu}_{i_{j},t}]} G_{j+1}(\mu_a').
+> > \hat{\mu}_{i_{j},t}=\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1},t}, \hat{\mu}_{i_{j},t}]} G_{j}(\mu_a')=\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+2},t}, \hat{\mu}_{i_{j+1},t}]} G_{j+1}(\mu_a').
 > > $$
 > > Since $G_j, G_j+1$ are both quadratic functions, we can conclude
 > > $$
-> > \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)} \leq \hat{\mu}_{i_{j}},\\
-> > \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j} N_{i_l}(t-1)} \geq \hat{\mu}_{i_{j}}.
+> > \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j} N_{i_l}(t-1)} \leq \hat{\mu}_{i_{j}},\\
+> > \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j+1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j+1} N_{i_l}(t-1)} \geq \hat{\mu}_{i_{j}}.
 > > $$
-> > Meanwhile, by the fact that $\hat{\mu}_{i_1, t} \geq \hat{\mu}_{i_2, t}\geq \cdots \geq \hat{\mu}_{i_m, t} > \hat{\mu}_{a,t}$, we have $\frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}\geq \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j} N_{i_l}(t-1)}$, which implies
+> > Meanwhile, by the fact that $\hat{\mu}_{i_1, t} \geq \hat{\mu}_{i_2, t}\geq \cdots \geq \hat{\mu}_{i_m, t} > \hat{\mu}_{a,t}$, we have $\frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j} N_{i_l}(t-1)}\geq \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j+1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j+1} N_{i_l}(t-1)}$, which implies
 > > $$
 > > \frac{N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)} = \hat{\mu}_{i_{j}}.
 > > $$
->
-> If $\mu_a^* \neq \hat{\mu}_{i_{j}}$ forall $j$, by the convexity, we get
+> 
+> If $\tilde{\mu}_a^*  \neq \hat{\mu}_{i_{j},t}$ forall $j$, by the convexity, we get
 > $$
 > \begin{align*}
-> & \exists j, \mu_a^*\in [\hat{\mu}_{i_{j},t}, \hat{\mu}_{i_{j-1},t}], \mu_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j},t}, \hat{\mu}_{i_{j-1},t}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
-> \Rightarrow & \exists j, \mu_a^* =\arg\min_{\mu_a'\in(\hat{\mu}_{i_{j},t}, \hat{\mu}_{i_{j-1},t})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
-> \stackrel{\text{Local optimality guarantess global optimality}}{\Rightarrow} & \exists j, \mu_a^* =\arg\min_{\mu_a'\in \mathbb{R}} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j-1} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
-> \Rightarrow &  \exists j, \mu_a^* =\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}.
+> & \exists j, \mu_a^*\in [\hat{\mu}_{i_{j+1},t}, \hat{\mu}_{i_{j},t}], \tilde{\mu}_a^* =\arg\min_{\mu_a'\in[\hat{\mu}_{i_{j+1},t}, \hat{\mu}_{i_{j},t}]} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \Rightarrow & \exists j, \tilde{\mu}_a^* =\arg\min_{\mu_a'\in(\hat{\mu}_{i_{j+1},t}, \hat{\mu}_{i_{j},t})} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \stackrel{\text{Local optimality guarantess global optimality}}{\Rightarrow} & \exists j, \tilde{\mu}_a^* =\arg\min_{\mu_a'\in \mathbb{R}} N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{l=1}^{j} N_{i_l}(t-1)\frac{(\hat{\mu}_{i_l,t}-\mu_a')^2}{2}\\
+> \Rightarrow &  \exists j,\tilde{\mu}_a^* =\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j} N_{i_l}(t-1)}.
 > \end{align*}
 > $$
-> In conclusion, we prove $\exists j, \mu_a^* =\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}$. And there exists a $j$, such that
+>In conclusion, we prove $\exists j, \tilde{\mu}_a^* =\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j} N_{i_l}(t-1)}$. And there exists a $j$, such that
 > $$
 > \min_{\mu_a' \geq \mu_0}N_a(t-1)\frac{(\hat{\mu}_{a,t}-\mu_a')^2}{2} + \sum_{i: \hat{\mu}_{i,t} > \hat{\mu}_{a,t}}N_i(t-1)\frac{(\hat{\mu}_{i,t}-\mu_a')^2}{2}\mathbb{1}(\hat{\mu}_{i,t} > \mu_a')\\ = \left(N_a(t-1) + \sum_{l=1}^j N_{i_l}(t-1)\right)(\mu_a^*)^2 -2(\mu_a^*)\left(N_a(t-1)\hat{\mu}_{a,t} + \sum_{l=1}^j N_{i_l}(t-1)\hat{\mu}_{i_l, t}\right) + \left(N_a(t-1)(\hat{\mu}_{a,t})^2 + \sum_{l=1}^j N_{i_l}(t-1)(\hat{\mu}_{i_l, t})^2\right)
 > $$
@@ -170,10 +172,10 @@ The algorithm for calculating the first element $i_t$ in each round $t$ is as fo
      \Rightarrow & \text{We only needs to focus on index }j\leq r
      \end{align*}
      $$
-    + If $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{j-1}, t}$,
+    + If $\frac{N_a(t-1)\mu_a' + \sum_{l=1}^{r-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{r-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{r-1}, t}$,
       $$
       \begin{align*}
-      & \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{j-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{j-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{j-1}, t}\\
+      & \frac{N_a(t-1)\mu_a' + \sum_{l=1}^{r-1} N_{i_l}(t-1)\hat{\mu}_{i_l, t}}{N_a(t-1) + \sum_{l=1}^{r-1} N_{i_l}(t-1)}> \hat{\mu}_{i_{r-1}, t}\\
       \Rightarrow & G_r(\mu_a')\text{ is decreasing in the interval } [\hat{\mu}_{i_{r}, t}, \hat{\mu}_{i_{r-1}, t}]\\
       \Rightarrow & G(\mu_a')\text{ is decreasing in the interval } [\hat{\mu}_{a, t}, \hat{\mu}_{i_{r-1}, t}]\\
       \Rightarrow & \text{We only needs to focus on index }j\geq r
@@ -212,8 +214,8 @@ That means $C$ cannot be independent of the arm number $K$, from the perspective
 
 + If $\hat{\mu}_{a,t} < \mu_0$ holds for all $a$, we take $w_a^*=\frac{\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}{\sum_{i=1}^K\frac{1}{d(\hat{\mu}_{a,t}, \mu_0)}}=\frac{\frac{1}{(\hat{\mu}_{a,t}-\mu_0)^2}}{\sum_{i=1}^K\frac{1}{(\hat{\mu}_{a,t}, \mu_0)^2}}$
 + If $\max_{1\leq a\leq K}\hat{\mu}_{a,t} > \mu_0$
-  + If $i_t\in i^*(\hat{\mu_t})$, we take $\vec{w}_t=e_{i_t}$
-  + If $i_t\notin i^*(\hat{\mu_t})$, $\vec{w}_t$ can be any vector in $\Delta_K$, as $\arg\sup_{\vec{w}\in \Delta_K}\inf_{\vec{\lambda}\in \neg i_t}\sum_{a=1}^K w_a\frac{(\mu_a-\lambda_a)^2}{2}=\arg\sup_{\vec{w}\in \Delta_K}0$. Here we take $\vec{w}_t=(\frac{1}{K},\frac{1}{K},\cdots,\frac{1}{K})$.
+  + If $i_t\in i^*(\hat{\mu}_t)$, we take $\vec{w}_t=e_{i_t}$
+  + If $i_t\notin i^*(\hat{\mu}_t)$, $\vec{w}_t$ can be any vector in $\Delta_K$, as $\arg\sup_{\vec{w}\in \Delta_K}\inf_{\vec{\lambda}\in \neg i_t}\sum_{a=1}^K w_a\frac{(\mu_a-\lambda_a)^2}{2}\stackrel{\vec{\lambda}=\vec{\mu}}{=}\arg\sup_{\vec{w}\in \Delta_K}0$. Here we take $\vec{w}_t=(\frac{1}{K},\frac{1}{K},\cdots,\frac{1}{K})$.
 
 ## The projection of $\vec{w}_t$​
 
