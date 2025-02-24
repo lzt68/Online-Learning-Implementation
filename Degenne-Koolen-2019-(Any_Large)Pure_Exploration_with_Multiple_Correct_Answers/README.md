@@ -20,6 +20,7 @@ We only work on instances whose maximum mean reward is not $\mu_0$​​, and un
     The behavior of these implementations are the same, while the running efficiency of Sticky_TaS_fast is the best and Sticky_TaS_old is the worse.
     The main difference is how to figure out the first element in $I_t$. Sticky_TaS_fast implements an algorithm that can achieves $O(K\log K)$ time complexity in each round.
   + env.py: Define the Gaussian Instance.
+  + Comparison-of-Three-Implementations.ipynb: This notebook compares the three implementations regarding their action and running speed. The numeric experiments show that given the same reward, these three implementations always adopt the same action. Regarding the execution speed, Sticky_TaS_fast is faster than Sticky-TaS. And Sticky-TaS is faster than Sticky_TaS_old. The difference of speed will become significant only when $K$ is large enough and $\delta$ is small enough
 
 
 

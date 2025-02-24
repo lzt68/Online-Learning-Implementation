@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def gss(f, a, b, threshold, ftoloerance=1e-6):
+def gss(f, a, b, threshold, xtolerance=1e-6):
     # use golden section search to judege whether function f's minimum point is below threshold
     if f(a) <= threshold or f(b) <= threshold:
         return True
@@ -16,7 +16,7 @@ def gss(f, a, b, threshold, ftoloerance=1e-6):
         if fc <= threshold or fd <= threshold:
             return True
 
-        if np.abs(fc - fd) < ftoloerance:
+        if np.abs(c-d) < xtolerance:
             return False
 
         if fc < fd:
@@ -25,7 +25,7 @@ def gss(f, a, b, threshold, ftoloerance=1e-6):
             a = c
 
 
-def gss_value(f, a, b, ftoloerance=1e-6):
+def gss_value(f, a, b, xtoloerance=1e-6):
     # use golden section search to judege whether function f's minimum point is below threshold
     invphi = (np.sqrt(5) - 1) / 2  # 1 / phi
     while True:
@@ -34,8 +34,9 @@ def gss_value(f, a, b, ftoloerance=1e-6):
         fc = f(c)
         fd = f(d)
 
-        if np.abs(fc - fd) < ftoloerance:
-            return (c + d) / 2, f((c + d) / 2)
+        if np.abs(c - d) < xtoloerance:
+            x0 = (c + d) / 2
+            return x0, f(x0)
 
         if fc < fd:
             b = d
@@ -897,19 +898,25 @@ class Sticky_TaS_fast(object):
 # %% unit test 5, check whether the actions from the Sticky_TaS_fast, Sticky_TaS, Sticky_TaS_old, are the same
 # from env import Environment_Gaussian
 
-# K = 100
+# # K = 100
+# # xi = 0.5
+# # Delta = 4
+# # rlist = np.zeros(K)
+# # rlist[-1] = xi + Delta
+# # delta = 0.0001
+# # rlist_temp = rlist[::-1].copy()
+# # # rlist_temp = rlist.copy()
+# # # # np.random.seed(exp_id)
+# # # # np.random.shuffle(rlist_temp)
+# # answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+
+# K = 10
 # xi = 0.5
 # Delta = 4
-# rlist = np.zeros(K)
-# rlist[-1] = xi + Delta
 # delta = 0.0001
-
-
-# rlist_temp = rlist[::-1].copy()
-# # rlist_temp = rlist.copy()
-# # # np.random.seed(exp_id)
-# # # np.random.shuffle(rlist_temp)
-# answer_set = list(np.where(rlist_temp > xi)[0] + 1)
+# np.random.seed(0)
+# rlist_temp = np.random.uniform(low=0.0, high=1.0, size=K)
+# rlist_temp[np.random.randint(low=0,high=K+1)] = xi + Delta
 
 # env = Environment_Gaussian(rlist=rlist_temp, K=K, random_seed=0)
 # agent_sas = Sticky_TaS(K=K, delta=delta, xi=xi, logC=1, log1_over_delta=1000)
