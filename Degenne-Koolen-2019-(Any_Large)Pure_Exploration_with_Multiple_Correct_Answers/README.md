@@ -20,9 +20,16 @@ We only work on instances whose maximum mean reward is not $\mu_0$​​, and un
     The behavior of these implementations are the same, while the running efficiency of Sticky_TaS_fast is the best and Sticky_TaS_old is the worse.
     The main difference is how to figure out the first element in $I_t$. Sticky_TaS_fast implements an algorithm that can achieves $O(K\log K)$ time complexity in each round.
   + env.py: Define the Gaussian Instance.
-  + Comparison-of-Three-Implementations.ipynb: This notebook compares the three implementations regarding their action and running speed. The numeric experiments show that given the same reward, these three implementations always adopt the same action. Regarding the execution speed, Sticky_TaS_fast is faster than Sticky-TaS. And Sticky-TaS is faster than Sticky_TaS_old. The difference of speed will become significant only when $K$ is large enough and $\delta$ is small enough
+  + Comparison-of-Three-Implementations.ipynb: This notebook compares the three implementations regarding their action and running speed. The numeric experiments show that given the same reward, these three implementations always adopt the same action. Regarding the execution speed, Sticky_TaS_fast is faster than Sticky-TaS. And Sticky-TaS is faster than Sticky_TaS_old. The difference of speed will become significant only when $K$ is large enough and $\delta$​ is small enough
+  
++ Experiment.ipynb: This notebook conducts experiment on testing S-Tas
 
+  1. The impact of the position of the qualified arm.
+     It seems if the position of the qualified arm is 1, the stopping times can be much smaller.
+  2. The convergence speed of the ration $\frac{\mathbb{E}\tau}{\log\frac{1}{\delta}}$.
+     The convergence speed is very slow, as $\frac{\mathbb{E}\tau}{\log\frac{1}{\delta}}$ will close to $T^*$ only when $\delta< \exp(-100)$.
 
+  
 
 Following are the supportive proof for the implementation Sticky_TaS_fast.
 
