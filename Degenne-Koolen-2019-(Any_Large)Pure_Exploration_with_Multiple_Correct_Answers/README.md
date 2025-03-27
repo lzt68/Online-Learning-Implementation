@@ -221,11 +221,11 @@ In the Theorem 10, the authors require to take $\beta(t,\delta)=\log\frac{Ct^2}{
 It is unclear how to specify the value of $C$. Notice that if we take $C\geq 1$​, we have
 $$
 \begin{align*}
-& e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left(\log (Ct^2))^2\log t\right)^K}{t^2}\\
-\geq & e(\frac{e}{K})^K\frac{\left(\log (Ct^2))^2\log t\right)^K}{t^2}|_{t=\lceil e^K\rceil}\\
-\geq & e(\frac{e}{K})^K \frac{(\log (C e^{4K}))^2 K)^K}{e^{2K}}\\
-\stackrel{C\geq 1}{\geq} & e(\frac{e}{K})^K \frac{(16K^2 K)^K}{(e^{K}+1)^2}\\
-= & e(\frac{e}{K})^K \frac{16^ K K^{3K}}{(e^{K}+1)^2}= e \frac{16^ K K^{2K}}{2e^{K}}.
+& e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left((\log (Ct^2))^2\log t\right)^K}{t^2}\\
+\geq & e(\frac{e}{K})^K\frac{\left((\log (Ct^2))^2\log t\right)^K}{t^2}|_{t=\lceil e^K\rceil}\\
+\geq & e(\frac{e}{K})^K \frac{((\log (C e^{2K}))^2 K)^K}{(e^{K}+1)^2}\\
+\stackrel{C\geq 1}{\geq} & e(\frac{e}{K})^K \frac{(4K^2 K)^K}{(e^{K}+1)^2}\\
+\geq & e(\frac{e}{K})^K \frac{4^ K K^{3K}}{4e^{2K}}= e \frac{4^ K K^{2K}}{4e^{K}}.
 \end{align*}
 $$
 That means $C$ cannot be independent of the arm number $K$, from the perspective of theoretical analysis.
