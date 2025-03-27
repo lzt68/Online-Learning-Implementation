@@ -41,9 +41,7 @@ class D_Tracking(object):
     def action(self):
         assert not self.if_stop, "The algorithm stopped"
 
-        U_t = np.array(
-            [aa for aa in range(0, self.K) if self.pulling_times[aa] <= self.g(self.t)]
-        )
+        U_t = np.array([aa for aa in range(0, self.K) if self.pulling_times[aa] <= self.g(self.t)])
         if len(U_t) >= 1:
             arm_index = np.argmin(self.pulling_times[U_t])
             action = U_t[arm_index] + 1
@@ -63,27 +61,21 @@ class D_Tracking(object):
         self.consumption_[action].append(d)
 
         pull = self.pulling_times[action - 1]
-        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (
-            pull / (pull + 1)
-        ) + r / (pull + 1)
-        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (
-            pull / (pull + 1)
-        ) + d / (pull + 1)
+        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (pull / (pull + 1)) + r / (pull + 1)
+        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (pull / (pull + 1)) + d / (pull + 1)
         self.pulling_times[action - 1] += 1
 
         # judge whether we should stop
         # our stoppting rule is $\max_a\min_{b\ne a} Z_{a, b}(t) > \beta(t, \delta)$
         empirical_best = np.argmax(self.mean_reward_)
 
-        def get_z_ab_t(
-            best_mean_reward, best_pulling_times, mean_reward, pulling_times
-        ):
-            hat_mu_ab = (
-                best_mean_reward * best_pulling_times + mean_reward * pulling_times
-            ) / (best_pulling_times + pulling_times)
-            z_ab_t = best_pulling_times * d_fun(
-                best_mean_reward, hat_mu_ab
-            ) + pulling_times * d_fun(mean_reward, hat_mu_ab)
+        def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
+            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
+                best_pulling_times + pulling_times
+            )
+            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
+                mean_reward, hat_mu_ab
+            )
             return z_ab_t
 
         z_ = np.array(
@@ -98,7 +90,7 @@ class D_Tracking(object):
                 if aa != empirical_best
             ]
         )
-        if np.max(z_) > self.beta(self.t):
+        if np.min(z_) > self.beta(self.t):
             self.if_stop = True
         self.t += 1
 
@@ -155,9 +147,7 @@ class C_Tracking(object):
                 B += epsilon - w[arm_index - 1]
             else:
                 if B / (self.K - 1 - j + 1) <= (w[arm_index - 1] - epsilon):
-                    projected_w[sorted_index_w[j:]] = w[sorted_index_w[j:]] - B / (
-                        self.K - 1 - j + 1
-                    )
+                    projected_w[sorted_index_w[j:]] = w[sorted_index_w[j:]] - B / (self.K - 1 - j + 1)
                     return projected_w
                 else:
                     projected_w[arm_index - 1] = epsilon
@@ -190,27 +180,21 @@ class C_Tracking(object):
         self.consumption_[action].append(d)
 
         pull = self.pulling_times[action - 1]
-        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (
-            pull / (pull + 1)
-        ) + r / (pull + 1)
-        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (
-            pull / (pull + 1)
-        ) + d / (pull + 1)
+        self.mean_reward_[action - 1] = self.mean_reward_[action - 1] * (pull / (pull + 1)) + r / (pull + 1)
+        self.mean_consumption_[action - 1] = self.mean_consumption_[action - 1] * (pull / (pull + 1)) + d / (pull + 1)
         self.pulling_times[action - 1] += 1
 
         # judge whether we should stop
         # our stoppting rule is $\max_a\min_{b\ne a} Z_{a, b}(t) > \beta(t, \delta)$
         empirical_best = np.argmax(self.mean_reward_)
 
-        def get_z_ab_t(
-            best_mean_reward, best_pulling_times, mean_reward, pulling_times
-        ):
-            hat_mu_ab = (
-                best_mean_reward * best_pulling_times + mean_reward * pulling_times
-            ) / (best_pulling_times + pulling_times)
-            z_ab_t = best_pulling_times * d_fun(
-                best_mean_reward, hat_mu_ab
-            ) + pulling_times * d_fun(mean_reward, hat_mu_ab)
+        def get_z_ab_t(best_mean_reward, best_pulling_times, mean_reward, pulling_times):
+            hat_mu_ab = (best_mean_reward * best_pulling_times + mean_reward * pulling_times) / (
+                best_pulling_times + pulling_times
+            )
+            z_ab_t = best_pulling_times * d_fun(best_mean_reward, hat_mu_ab) + pulling_times * d_fun(
+                mean_reward, hat_mu_ab
+            )
             return z_ab_t
 
         z_ = np.array(
@@ -225,7 +209,7 @@ class C_Tracking(object):
                 if aa != empirical_best
             ]
         )
-        if np.max(z_) > self.beta(self.t):
+        if np.min(z_) > self.beta(self.t):
             self.if_stop = True
         self.t += 1
 
@@ -317,15 +301,19 @@ class C_Tracking(object):
 
 # %% unit test 2, test whether D-Tracking can work
 # from env import Env__Deterministic_Consumption
+# from tqdm import tqdm
 
-# K = 2
+# K = 10
 # # mu = np.array([0.5, 0.3])
-# mu = np.array([0.3, 0.5])
+# np.random.seed = 12345
 # delta = 0.1
 # n_experiments = 10
 
-# for exp_id in range(n_experiments):
-#     count_round = 0
+# accr_ = []
+# for exp_id in tqdm(range(n_experiments)):
+#     mu = np.ones(K) * 0.5
+#     best_arm = np.random.randint(low=1, high=K + 1)
+#     mu[best_arm - 1] = 1
 
 #     env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
 #     agent = D_Tracking(K=K, delta=delta)
@@ -334,7 +322,10 @@ class C_Tracking(object):
 #         action = agent.action()
 #         reward, demand = env.response(action=action)
 #         agent.observe(r=reward, d=demand)
-#     print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
+#     predicted_arm = agent.predict()
+#     accr_.append(best_arm == predicted_arm)
+# accr = np.mean(accr_)
+# print(f"Accuracy is {accr}")
 
 # %% unit test 3, test whether D-Tracking can work on a larger scale
 # from env import Env__Deterministic_Consumption
@@ -382,15 +373,19 @@ class C_Tracking(object):
 
 # %% unit test 5, test whether C-Tracking can work
 # from env import Env__Deterministic_Consumption
+# from tqdm import tqdm
 
-# K = 2
+# K = 10
 # # mu = np.array([0.5, 0.3])
-# mu = np.array([0.3, 0.5])
+# np.random.seed = 12345
 # delta = 0.1
 # n_experiments = 10
 
-# for exp_id in range(n_experiments):
-#     count_round = 0
+# accr_ = []
+# for exp_id in tqdm(range(n_experiments)):
+#     mu = np.ones(K) * 0.5
+#     best_arm = np.random.randint(low=1, high=K + 1)
+#     mu[best_arm - 1] = 1
 
 #     env = Env__Deterministic_Consumption(K=K, d=np.ones(K), r=mu, random_seed=exp_id)
 #     agent = C_Tracking(K=K, delta=delta)
@@ -399,7 +394,10 @@ class C_Tracking(object):
 #         action = agent.action()
 #         reward, demand = env.response(action=action)
 #         agent.observe(r=reward, d=demand)
-#     print(f"Experiment {exp_id}, predicted best arm is {agent.predict()}")
+#     predicted_arm = agent.predict()
+#     accr_.append(best_arm == predicted_arm)
+# accr = np.mean(accr_)
+# print(f"Accuracy is {accr}")
 
 # %% unit test 6, test whether C-Tracking can work on a larger scale
 # from env import Env__Deterministic_Consumption
