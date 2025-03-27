@@ -6,6 +6,8 @@ There are two versions of tracking strategy mentioned in the paper, which are C-
 
 Here we assume the reward follows Bernoulli Distribution.
 
+<font color=red>Update on  Mar 27th, 2025. The implementation of the numeric experiment is incorrect. To be redo.</font>
+
 ## Remarks
 
 1. When we calculate $x\log \frac{x}{y}+(1-x)\log\frac{1-x}{1-y}$, we set a minimum threshold 0.001 and maximum threshold 0.999 for both x and y to avoid numeric error.
