@@ -228,7 +228,34 @@ $$
 \geq & e(\frac{e}{K})^K \frac{4^ K K^{3K}}{4e^{2K}}= e \frac{4^ K K^{2K}}{4e^{K}}.
 \end{align*}
 $$
-That means $C$ cannot be independent of the arm number $K$, from the perspective of theoretical analysis.
+That means $C$ cannot be independent of the arm number $K$​, from the perspective of theoretical analysis.
+
+We have
+$$
+C\geq e \frac{4^ K K^{2K}}{4e^{K}}\Rightarrow \log C\geq 1 -\log 4 + 2K\log K +K\log\frac{4}{e}
+$$
+
+> We have
+> $$
+> \begin{align*}
+> & e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left((\log (Ct^2))^2\log t\right)^K}{t^2}\\
+> \geq & e\sum_{n=2}^{+\infty}\sum_{t=\lfloor e^{(n-1)K}\rfloor}^{\lfloor e^{nK}\rfloor}(\frac{e}{K})^K\frac{\left((\log (t^2))^2\log t\right)^K}{t^2}\\
+> \geq & e\sum_{n=2}^{+\infty}\sum_{t=\lfloor e^{(n-1)K}\rfloor}^{\lfloor e^{nK}\rfloor}(\frac{e}{K})^K\frac{\left((\log (\lfloor e^{(n-1)K}\rfloor^2))^2\log \lfloor e^{(n-1)K}\rfloor\right)^K}{e^{2nK}}\\
+> \geq & e\sum_{n=2}^{+\infty}\sum_{t=\lfloor e^{(n-1)K}\rfloor}^{\lfloor e^{nK}\rfloor}(\frac{e}{K})^K\frac{\left((\log ( e^{2(n-1)K-2}))^2\log  e^{(n-1)K-1}\right)^K}{e^{2nK}}\\
+> = & e\sum_{n=2}^{+\infty}\sum_{t=\lfloor e^{(n-1)K}\rfloor}^{\lfloor e^{nK}\rfloor}(\frac{e}{K})^K\frac{\left((2(n-1)K-2)^2((n-1)K-1)\right)^K}{e^{2nK}}\\
+> = & e\sum_{n=2}^{+\infty}\sum_{t=\lfloor e^{(n-1)K}\rfloor}^{\lfloor e^{nK}\rfloor}(\frac{1}{K})^K\frac{\left((2(n-1)K-2)^2((n-1)K-1)\right)^K}{e^{2nK-1}}\\
+> \geq & e\sum_{n=2}^{+\infty}\left(\lfloor e^{nK}\rfloor-\lfloor e^{(n-1)K}\rfloor\right)(\frac{1}{K})^K\frac{\left((2(n-1)K-2)^2((n-1)K-1)\right)^K}{e^{2nK-1}}\\
+> \end{align*}
+> $$
+> Regarding $n$, seems the first term $n=2$​ will dominate the whole series, which means
+> $$
+> \begin{align*}
+> & C\\
+> \geq & e\sum_{t=1}^{+\infty}(\frac{e}{K})^K\frac{\left((\log (Ct^2))^2\log t\right)^K}{t^2}\\
+> \geq & e\left(\lfloor e^{2K}\rfloor-\lfloor e^{K}\rfloor\right)(\frac{1}{K})^K\frac{\left((2K-2)^2(K-1)\right)^K}{e^{4K-1}}\\
+> \end{align*}
+> $$
+> 
 
 ## Determine $\vec{w}_t$
 
