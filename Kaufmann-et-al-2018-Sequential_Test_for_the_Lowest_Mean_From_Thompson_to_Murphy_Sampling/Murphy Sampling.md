@@ -7,7 +7,7 @@ The main difficulties is to find a prior whose supper set is $(-\infty, \gamma)$
 For Gaussian Conjugate, let's take prior $\nu$ as the following
 
 + Sample X from distribution with density $ \frac{1}{\sqrt{2\pi}\sigma} \exp(-\frac{(x-\gamma)^2}{2\sigma^2})$
-+ If $X< \gamma$, sample again.
++ until $X\geq \gamma$
 
 Then for any real value $x\leq \gamma$, we have $F_X(x)=0$.
 
@@ -42,7 +42,7 @@ We can sample the result by
 Let's take prior $\mu\in \mathbb{R}^K$​ as the following
 
 + Sample X from distribution with density $ \otimes_{a=1}^K\frac{1}{\sqrt{2\pi}\sigma} \exp(-\frac{(x_a-\gamma)^2}{2\sigma^2})$
-+ If $\max_{a\in [K]}\mu_a<\gamma$​, sample again
++ until $\max_{a\in [K]}\mu_a\geq \gamma$​
 
 Then for any real value $x_a\leq \gamma, a\in[K]$, we have $F_\mu(\mu_a\leq x_a)=0$​.
 
@@ -85,6 +85,19 @@ $$
 > \sum_{n=1}^{+\infty}\frac{1}{(2^K)^{n-1}} = \frac{1}{1-\frac{1}{2^K}} = \frac{2^K}{2^K-1}
 > $$
 >
+
+Now, given $\{\{X_{a,t}\}_{t=1}^{N_a}\}_{a=1}^K$ for each $a$, the conditional density of $\mu| \{\{X_{a,t}\}_{t=1}^{N_a}\}_{a=1}^K $ is
+$$
+\begin{align*}
+& f_{\mu| \{\{X_{a,t}\}_{t=1}^{N_a}\}_{a=1}^K }(\{x_a\}_{a=1}^K)\\
+\propto & \frac{2^K}{2^K-1}\left(\prod_{a=1}^K \phi(x_a) - \prod_{a=1}^K \phi(x_a)\mathbb{1}(x_a>\gamma)\right)\cdot \prod_{a=1}^K\exp\left(-\frac{\sum_{t=1}^{n_a} (X_{a,t}-x_a)^2}{2\sigma^2}\right)\\
+\propto & \prod_{a=1}^K \exp\left(-\frac{(n_a+1)x_a^2 -(\gamma+\sum_{t=1}^{n_a}X_{a,t})x_a}{2\sigma^2}\right)-\prod_{a=1}^K \exp\left(-\frac{(n_a+1)x_a^2 -(\gamma+\sum_{t=1}^{n_a}X_{a,t})x_a}{2\sigma^2}\right)\mathbb{1}(x_a>\gamma)\\
+\end{align*}
+$$
+We can sample the result by 
+
++ Sample $\mu_a$ from normal distribution $N(\frac{\gamma+\sum_{t=1}^{n_a} X_{a, t}}{n_a+1}, \frac{\sigma^2}{n+1})$
++ until $\max_{a\in [K]}\mu_a\geq \gamma$
 
 ## Bayesian Rule
 
