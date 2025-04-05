@@ -54,8 +54,8 @@ Here we can take $\eta=\gamma$.
 
 Let's take prior $\mu\in \mathbb{R}^K$​ as the following
 
-+ Sample X from distribution with density $ \otimes_{a=1}^K\frac{1}{\sqrt{2\pi}\sigma} \exp(-\frac{(x_a-\eta_a)^2}{2\sigma^2})$
-+ until $\max_{a\in [K]}\mu_a\geq \gamma$​
++ Sample $\mu$ from distribution with density $ \otimes_{a=1}^K\frac{1}{\sqrt{2\pi}\sigma} \exp(-\frac{(x_a-\eta_a)^2}{2\sigma^2})$
++ until $\max_{a\in [K]}\mu_a\geq \mu_0$​
 
 Then for any real value $x_a\leq \gamma, a\in[K]$, we have $F_\mu(\mu_a\leq x_a)=0$​.
 
@@ -87,8 +87,10 @@ $$
 $$
 We can sample the result by 
 
-+ Sample $\mu_a$ from normal distribution $N(\frac{\eta_a+\sum_{t=1}^{N_a} X_{a, t}}{N_a+1}, \frac{\sigma^2}{N_a+1})$
-+ until $\max_{a\in [K]}\mu_a\geq \gamma$
++ Sample $r_a$ from normal distribution $N(\frac{\eta_a+\sum_{t=1}^{N_a} X_{a, t}}{N_a+1}, \frac{\sigma^2}{N_a+1})$
++ until $\max_{a\in [K]}\mu_a\geq \mu_0$
+
+Then given the vector $\{r_a\}_{a=1}^K$ such that $\max_{a\in [K]}r_a\geq \gamma$, we pull arm $\arg\max_{a\in [K]}r_a$
 
 ## Bayesian Rule
 
