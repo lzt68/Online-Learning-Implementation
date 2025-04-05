@@ -57,40 +57,49 @@ Let's take prior $\mu\in \mathbb{R}^K$​ as the following
 + Sample $\mu$ from distribution with density $ \otimes_{a=1}^K\frac{1}{\sqrt{2\pi}\sigma} \exp(-\frac{(x_a-\eta_a)^2}{2\sigma^2})$
 + until $\max_{a\in [K]}\mu_a\geq \mu_0$​
 
-Then for any real value $x_a\leq \gamma, a\in[K]$, we have $F_\mu(\mu_a\leq x_a)=0$​.
+Then for any real value $x_a\leq \mu_0, a\in[K]$, we have $F_\mu(\mu_a\leq x_a)=0$​.
 
 For any real vector such that $\max_{a\in[K]}x_a>\gamma$​, we have
 $$
 \begin{align*}
 \Pr(\mu_a\leq x_a, \forall a)
-= & \sum_{n=1}^{+\infty}\Pr( X_a^i<\gamma,i\in [n-1], a\in [K]; X^n_a\leq x_a, \max_{a\in [K]}X_a^n > \gamma)\\
-= & \sum_{n=1}^{+\infty}\frac{\Pr(X^1_a\leq x_a, \max_{a\in [K]}X_a^1 > \gamma)}{\prod_{a=1}^K\Psi(\gamma; \eta_a,\sigma^2)^{n-1}} \\
-= & \frac{\Pr(X^1_a\leq x_a, \forall a\in[K]; \max_{a\in [K]}X_a^1 > \gamma)}{1-\prod_{a=1}^K\Psi(\gamma; \eta_a,\sigma^2)}\\
-= & \frac{\Pr(X^1_a\leq x_a, \forall a\in[K]) - \Pr(X^1_a\leq x_a, \forall a\in[K]; \max_{a\in [K]}X_a^1 \leq \gamma) }{1-\prod_{a=1}^K\Psi(\gamma; \eta_a,\sigma^2)}\\
-= & \frac{\prod_{a=1}^K \Psi(x_a;\eta_a,\sigma^2) - \prod_{a=1}^K \Psi(\min\{x_a, \gamma\};\eta_a,\sigma^2) }{1-\prod_{a=1}^K\Psi(\gamma; \eta_a,\sigma^2)}
+= & \sum_{n=1}^{+\infty}\Pr( X_a^i<\mu_0,i\in [n-1], a\in [K]; X^n_a\leq x_a, \max_{a\in [K]}X_a^n > \mu_0)\\
+= & \sum_{n=1}^{+\infty}\frac{\Pr(X^1_a\leq x_a, \max_{a\in [K]}X_a^1 > \mu_0)}{\prod_{a=1}^K\Psi(\mu_0; \eta_a,\sigma^2)^{n-1}} \\
+= & \frac{\Pr(X^1_a\leq x_a, \forall a\in[K]; \max_{a\in [K]}X_a^1 > \mu_0)}{1-\prod_{a=1}^K\Psi(\mu_0; \eta_a,\sigma^2)}\\
+= & \frac{\Pr(X^1_a\leq x_a, \forall a\in[K]) - \Pr(X^1_a\leq x_a, \forall a\in[K]; \max_{a\in [K]}X_a^1 \leq \mu_0) }{1-\prod_{a=1}^K\Psi(\mu_0; \eta_a,\sigma^2)}\\
+= & \frac{\prod_{a=1}^K \Psi(x_a;\eta_a,\sigma^2) - \prod_{a=1}^K \Psi(\min\{x_a, \mu_0\};\eta_a,\sigma^2) }{1-\prod_{a=1}^K\Psi(\mu_0; \eta_a,\sigma^2)}
 \end{align*}
 $$
 Thus, we can conclude the density is
 $$
 f(\{x_a\}_{a=1}^K) =\begin{cases}
-\frac{\prod_{a=1}^K \psi(x_a;\eta_a,\sigma^2) - \prod_{a=1}^K \psi(x_a;\eta_a,\sigma^2)\mathbb{1}(x_a\leq \gamma) }{1-\prod_{a=1}^K\Psi(\gamma; \eta_a,\sigma^2)} & \max_{a\in [K]}\mu_a\geq \gamma\\
-0 & \max_{a\in [K]}\mu_a< \gamma\\
+\frac{\prod_{a=1}^K \psi(x_a;\eta_a,\sigma^2) - \prod_{a=1}^K \psi(x_a;\eta_a,\sigma^2)\mathbb{1}(x_a\leq \mu_0) }{1-\prod_{a=1}^K\Psi(\mu_0; \eta_a,\sigma^2)} & \max_{a\in [K]}\mu_a\geq \mu_0\\
+0 & \max_{a\in [K]}\mu_a< \mu_0\\
 \end{cases}
 $$
 Now, given $\{\{X_{a,t}\}_{t=1}^{N_a}\}_{a=1}^K$ for each $a$, the conditional density of $\mu| \{\{X_{a,t}\}_{t=1}^{N_a}\}_{a=1}^K $ is
 $$
 \begin{align*}
 & f_{\mu| \{\{X_{a,t}\}_{t=1}^{N_a}\}_{a=1}^K }(\{x_a\}_{a=1}^K)\\
-\propto & \left(\prod_{a=1}^K \phi(x_a;\eta_a,\sigma^2) - \prod_{a=1}^K \phi(x_a;\eta_a,\sigma^2)\mathbb{1}(x_a\leq \gamma)\right)\cdot \prod_{a=1}^K\exp\left(-\frac{\sum_{t=1}^{N_a} (X_{a,t}-x_a)^2}{2\sigma^2}\right)\\
-\propto & \prod_{a=1}^K \exp\left(-\frac{(N_a+1)x_a^2 -(\eta_a+\sum_{t=1}^{n_a}X_{a,t})x_a}{2\sigma^2}\right)-\prod_{a=1}^K \exp\left(-\frac{(N_a+1)x_a^2 -(\eta_a+\sum_{t=1}^{n_a}X_{a,t})x_a}{2\sigma^2}\right)\mathbb{1}(x_a\leq \gamma)\\
+\propto & \left(\prod_{a=1}^K \phi(x_a;\eta_a,\sigma^2) - \prod_{a=1}^K \phi(x_a;\eta_a,\sigma^2)\mathbb{1}(x_a\leq \mu_0)\right)\cdot \prod_{a=1}^K\exp\left(-\frac{\sum_{t=1}^{N_a} (X_{a,t}-x_a)^2}{2\sigma^2}\right)\\
+\propto & \prod_{a=1}^K \exp\left(-\frac{(N_a+1)x_a^2 -(\eta_a+\sum_{t=1}^{n_a}X_{a,t})x_a}{2\sigma^2}\right)-\prod_{a=1}^K \exp\left(-\frac{(N_a+1)x_a^2 -(\eta_a+\sum_{t=1}^{n_a}X_{a,t})x_a}{2\sigma^2}\right)\mathbb{1}(x_a\leq \mu_0)\\
 \end{align*}
 $$
+which is
+$$
+f_{r| \{\{X_{a,t}\}_{t=1}^{N_a}\}_{a=1}^K }(\{x_a\}_{a=1}^K)=\begin{cases}
+\frac{\prod_{a=1}^K \psi(x_a;\frac{\eta_a+\sum_{t=1}^{N_a} X_{a, t}}{N_a+1},\frac{\sigma^2}{N_a+1}) - \prod_{a=1}^K \psi(x_a;\frac{\eta_a+\sum_{t=1}^{N_a} X_{a, t}}{N_a+1},\frac{\sigma^2}{N_a+1})\mathbb{1}(x_a\leq \mu_0) }{1-\prod_{a=1}^K\Psi(\mu_0; \frac{\eta_a+\sum_{t=1}^{N_a} X_{a, t}}{N_a+1},\frac{\sigma^2}{N_a+1})} & \max_{a\in [K]}x_a\geq \mu_0\\
+0 & \max_{a\in [K]}x_a< \mu_0\\
+\end{cases}
+$$
+
+
 We can sample the result by 
 
 + Sample $r_a$ from normal distribution $N(\frac{\eta_a+\sum_{t=1}^{N_a} X_{a, t}}{N_a+1}, \frac{\sigma^2}{N_a+1})$
 + until $\max_{a\in [K]}\mu_a\geq \mu_0$
 
-Then given the vector $\{r_a\}_{a=1}^K$ such that $\max_{a\in [K]}r_a\geq \gamma$, we pull arm $\arg\max_{a\in [K]}r_a$
+Then given the vector $\{r_a\}_{a=1}^K$ such that $\max_{a\in [K]}r_a\geq \mu_0$, we pull arm $\arg\max_{a\in [K]}r_a$
 
 ## Bayesian Rule
 
